@@ -1,38 +1,46 @@
 package com.example.web_ai.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
+
+import java.util.UUID;
+
+import static lombok.AccessLevel.PRIVATE;
 
 @Entity
 @Table(name = "users")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldDefaults(level = PRIVATE)
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(nullable = false)
+    UUID id;
 
     @Column(nullable = false)
-    private String fullName;
+    String fullName;
 
     @Column(nullable = false, unique = true, length = 100)
-    private String username;
+    String username;
 
     @Column(nullable = false)
-    private String password;
+    String password;
 
     @Column(nullable = false, unique = true, length = 200)
-    private String email;
+    String email;
 
     @Column(nullable = false, unique = true)
-    private String phone;
+    String phone;
 
     @Column(length = 50)
-    private String role;
+    int role;
 
     @Column(nullable = false)
-    private boolean active = true;
+    boolean active = true;
 }

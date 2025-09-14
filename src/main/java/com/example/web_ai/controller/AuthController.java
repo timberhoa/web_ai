@@ -1,6 +1,8 @@
 package com.example.web_ai.controller;
 
+import com.example.web_ai.dto.request.LoginRequest;
 import com.example.web_ai.dto.request.Register;
+import com.example.web_ai.dto.response.AuthResponse;
 import com.example.web_ai.dto.response.UserResponse;
 import com.example.web_ai.service.AuthService;
 import jakarta.validation.Valid;
@@ -20,4 +22,14 @@ public class AuthController {
         UserResponse response = authService.register(request);
         return ResponseEntity.ok(response);
     }
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req) {
+        return ResponseEntity.ok(authService.login(req));
+    }
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout() {
+        return ResponseEntity.ok(authService.logout());
+    }
+
+
 }

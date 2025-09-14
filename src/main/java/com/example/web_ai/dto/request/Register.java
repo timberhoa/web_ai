@@ -3,23 +3,29 @@ package com.example.web_ai.dto.request;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
+
+import static lombok.AccessLevel.PRIVATE;
 
 @Data
+@FieldDefaults(level = PRIVATE)
 public class Register {
     @NotBlank
-    private String fullName;
+    String fullName;
 
     @NotBlank
-    private String username;
+    String username;
 
     @NotBlank
-    private String password;
+    String password;
 
     @Email
     @NotBlank
-    private String email;
+    String email;
 
     @NotBlank
-    private String phone;
+    String phone;
+
+    Integer role;
 
 }

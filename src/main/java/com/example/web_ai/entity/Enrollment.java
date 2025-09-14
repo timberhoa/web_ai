@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Entity
 @Table(name = "enrollments")
 @Data
@@ -12,8 +14,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Enrollment {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(nullable = false)
+    UUID id;
 
     @ManyToOne
     @JoinColumn(name = "course_id")

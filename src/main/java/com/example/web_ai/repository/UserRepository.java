@@ -3,8 +3,9 @@ package com.example.web_ai.repository;
 import com.example.web_ai.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserRepository extends JpaRepository<User, Long> {
-    boolean existsByUsername(String username);
-    boolean existsByEmail(String email);
-    boolean existsByPhone(String phone);
+import java.util.Optional;
+import java.util.UUID;
+
+public interface UserRepository extends JpaRepository<User, UUID> {
+    Optional<User> findUserById(UUID id);
 }

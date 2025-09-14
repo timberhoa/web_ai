@@ -4,15 +4,22 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
+
+import java.util.UUID;
+
+import static lombok.AccessLevel.PRIVATE;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = PRIVATE)
 public class UserResponse {
-    private String fullName;
-    private String username;
-    private String email;
-    private String phone;
-    private String role;
+    UUID id;
+    String fullName;
+    String username;
+    String email;
+    String phone;
+    Integer role;
 }

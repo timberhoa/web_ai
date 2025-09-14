@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "class_sessions")
@@ -14,8 +15,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ClassSession {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(nullable = false)
+    UUID id;
 
     @ManyToOne
     @JoinColumn(name = "course_id")

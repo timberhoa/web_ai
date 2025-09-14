@@ -1,6 +1,5 @@
 package com.example.web_ai.dto.request;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
@@ -9,18 +8,11 @@ import static lombok.AccessLevel.PRIVATE;
 
 @Data
 @FieldDefaults(level = PRIVATE)
-public class UserRequest {
-    @NotBlank
-    String fullName;
-
+public class LoginRequest {
     @NotBlank
     String username;
-
-    @Email
     @NotBlank
-    String email;
+    String password;
 
-    @NotBlank
-    String phone;
 
 }
