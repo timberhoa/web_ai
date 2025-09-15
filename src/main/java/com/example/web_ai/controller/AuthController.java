@@ -1,7 +1,7 @@
 package com.example.web_ai.controller;
 
 import com.example.web_ai.dto.request.LoginRequest;
-import com.example.web_ai.dto.request.Register;
+import com.example.web_ai.dto.request.UserRequest;
 import com.example.web_ai.dto.response.AuthResponse;
 import com.example.web_ai.dto.response.UserResponse;
 import com.example.web_ai.service.AuthService;
@@ -18,7 +18,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@Valid @RequestBody Register request) {
+    public ResponseEntity<UserResponse> register(@Valid @RequestBody UserRequest request) {
         UserResponse response = authService.register(request);
         return ResponseEntity.ok(response);
     }

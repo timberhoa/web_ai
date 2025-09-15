@@ -1,5 +1,6 @@
 package com.example.web_ai.controller;
 
+import com.example.web_ai.dto.request.ResetPassword;
 import com.example.web_ai.dto.request.UserRequest;
 import com.example.web_ai.dto.response.UserResponse;
 import com.example.web_ai.service.UserService;
@@ -24,5 +25,10 @@ public class UserController {
     public ResponseEntity<UserResponse> update(@PathVariable UUID id,
                                                @RequestBody UserRequest req) {
         return ResponseEntity.ok(userService.updateUser(id, req));
+    }
+
+    @PutMapping("/updatePassword/{id}")
+    public void updatePassword(@RequestParam UUID id, @RequestBody ResetPassword req) {
+        userService.updatePassword(id, req);
     }
 }

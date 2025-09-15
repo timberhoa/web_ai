@@ -4,15 +4,19 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+
+import static lombok.AccessLevel.PRIVATE;
 
 @Entity
 @Table(name = "class_sessions")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldDefaults(level = PRIVATE)
 public class ClassSession {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -21,13 +25,13 @@ public class ClassSession {
 
     @ManyToOne
     @JoinColumn(name = "course_id")
-    private Course course;
+    Course course;
 
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    LocalDateTime startTime;
+    LocalDateTime endTime;
 
-    private String roomName;
-    private double latitude;
-    private double longitude;
-    private double radiusMeters;
+    String roomName;
+    double latitude;
+    double longitude;
+    double radiusMeters;
 }

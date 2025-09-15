@@ -1,7 +1,7 @@
 package com.example.web_ai.service;
 
 import com.example.web_ai.dto.request.LoginRequest;
-import com.example.web_ai.dto.request.Register;
+import com.example.web_ai.dto.request.UserRequest;
 import com.example.web_ai.dto.response.AuthResponse;
 import com.example.web_ai.dto.response.UserResponse;
 import com.example.web_ai.entity.User;
@@ -20,7 +20,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public UserResponse register(Register req) {
+    public UserResponse register(UserRequest req) {
         if (userRepository.existsByUsername(req.getUsername()))
             throw new IllegalArgumentException("Username already exists");
         if (userRepository.existsByEmail(req.getEmail()))

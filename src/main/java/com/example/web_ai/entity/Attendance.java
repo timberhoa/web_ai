@@ -4,18 +4,22 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+
+import static lombok.AccessLevel.PRIVATE;
 
 @Entity
 @Table(name = "attendances")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldDefaults(level = PRIVATE)
 public class Attendance {
 
-    public enum Status { PRESENT, LATE, ABSENT, EXCUSED }
+    public enum Status {PRESENT, LATE, ABSENT, EXCUSED}
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -24,16 +28,16 @@ public class Attendance {
 
     @ManyToOne
     @JoinColumn(name = "session_id")
-    private ClassSession session;
+    ClassSession session;
 
     @ManyToOne
     @JoinColumn(name = "student_id")
-    private User student;
+    User student;
 
-    private LocalDateTime checkedAt;
-    private Double studentLat;
-    private Double studentLng;
+    LocalDateTime checkedAt;
+    Double studentLat;
+    Double studentLng;
 
     @Enumerated(EnumType.STRING)
-    private Status status = Status.PRESENT;
+    Status status = Status.PRESENT;
 }

@@ -1,5 +1,6 @@
 package com.example.web_ai.entity;
 
+import com.example.web_ai.enums.Role;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -38,8 +39,9 @@ public class User {
     @Column(nullable = false, unique = true)
     String phone;
 
-    @Column(length = 50)
-    int role;
+    @Enumerated(EnumType.STRING)
+    private Role role;
+
 
     @Column(nullable = false)
     boolean active = true;

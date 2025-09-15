@@ -1,9 +1,7 @@
 package com.example.web_ai.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.util.UUID;
@@ -11,22 +9,24 @@ import java.util.UUID;
 import static lombok.AccessLevel.PRIVATE;
 
 @Entity
-@Table(name = "enrollments")
+@Table(name = "faculties")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @FieldDefaults(level = PRIVATE)
-public class Enrollment {
+public class Faculty {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(nullable = false)
     UUID id;
 
-    @ManyToOne
-    @JoinColumn(name = "course_id")
-    Course course;
+    @Column(nullable = false, unique = true, length = 50)
+    String code;
+
+    @Column(nullable = false, length = 150)
+    String name;
 
     @ManyToOne
-    @JoinColumn(name = "student_id")
-    User student;
+    @JoinColumn(name = "teacher_id")
+    User teacher;
 }

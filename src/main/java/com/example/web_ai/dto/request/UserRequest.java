@@ -1,5 +1,6 @@
 package com.example.web_ai.dto.request;
 
+import com.example.web_ai.enums.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -16,11 +17,19 @@ public class UserRequest {
     @NotBlank
     String username;
 
+    @NotBlank
+    String password;
+
     @Email
     @NotBlank
     String email;
 
     @NotBlank
     String phone;
+
+    Role role;
+
+    @NotBlank
+    Boolean active;
 
 }

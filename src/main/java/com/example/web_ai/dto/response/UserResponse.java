@@ -1,5 +1,6 @@
 package com.example.web_ai.dto.response;
 
+import com.example.web_ai.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,5 +22,6 @@ public class UserResponse {
     String username;
     String email;
     String phone;
-    Integer role;
+    Role role;
+    Boolean active;
 }
