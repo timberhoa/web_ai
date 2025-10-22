@@ -1,5 +1,6 @@
 package com.example.web_ai.service;
 
+import com.example.web_ai.exception.BadRequestException;
 import com.example.web_ai.dto.request.LoginRequest;
 import com.example.web_ai.dto.request.UserRequest;
 import com.example.web_ai.dto.response.AuthResponse;
@@ -15,18 +16,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-
     private final AuthRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public UserResponse register(UserRequest req) {
         if (userRepository.existsByUsername(req.getUsername()))
-            throw new IllegalArgumentException("Username already exists");
+            throw new BadRequestException("Username already exists");
         if (userRepository.existsByEmail(req.getEmail()))
-            throw new IllegalArgumentException("Email already exists");
+            throw new BadRequestException("Email already exists");
         if (userRepository.existsByPhone(req.getPhone()))
-            throw new IllegalArgumentException("Phone already exists");
+            throw new BadRequestException("Phone already exists");
 
         User user = new User();
         user.setFullName(req.getFullName());

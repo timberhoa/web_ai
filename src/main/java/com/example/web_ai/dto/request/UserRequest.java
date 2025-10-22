@@ -3,6 +3,7 @@ package com.example.web_ai.dto.request;
 import com.example.web_ai.enums.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
@@ -29,7 +30,7 @@ public class UserRequest {
 
     Role role;
 
-    @NotBlank
+    @NotNull
     Boolean active;
 
 }
