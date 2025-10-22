@@ -6,6 +6,8 @@ import com.example.web_ai.dto.request.UserRequest;
 import com.example.web_ai.dto.response.AuthResponse;
 import com.example.web_ai.dto.response.UserResponse;
 import com.example.web_ai.entity.User;
+import com.example.web_ai.exception.NotFoundException;
+import com.example.web_ai.exception.UnauthorizedException;
 import com.example.web_ai.repository.AuthRepository;
 import com.example.web_ai.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -51,10 +53,10 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest req) {
         User user = userRepository.findByUsername(req.getUsername())
-                .orElseThrow(() -> new RuntimeException("USER_NOT_FOUND"));
+                .orElseThrow(() -> new NotFoundException("USER_NOT_FOUND"));
 
         if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
-            throw new RuntimeException("WRONG_PASSWORD");
+            throw new UnauthorizedException("WRONG_PASSWORD");
         }
 
         String token = JwtUtil.generateToken(user);
