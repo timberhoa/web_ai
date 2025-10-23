@@ -21,7 +21,7 @@ import static lombok.AccessLevel.PRIVATE;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "CHAR(36)")
     UUID id;
 
     @Column(nullable = false)

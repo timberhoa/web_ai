@@ -7,6 +7,7 @@ import com.example.web_ai.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 import java.util.UUID;
@@ -23,15 +24,14 @@ public class UserController {
         return userService.getUserById(id);
     }
 
+    @PreAuthorize("hasAnyRole('LECTURER')")
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getMyProfile(Authentication authentication){
         String username = authentication.getName();
         log.info("🔹 Username from Authentication: {}", username);
         UserResponse res = userService.getUserByUsername(username);
 
-
         return ResponseEntity.ok(res);
-
     }
 
     @PutMapping("/{id}")

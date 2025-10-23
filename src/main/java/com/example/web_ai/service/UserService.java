@@ -40,8 +40,6 @@ public class UserService {
         User user = userRepository.findUserByUsername(username)
                 .orElseThrow(() -> new NotFoundException("User Not Found"));
 
-        log.info("User: {}", user);
-
         return userMapper.toResponse(user);
     }
 

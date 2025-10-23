@@ -20,6 +20,10 @@ import static lombok.AccessLevel.PRIVATE;
 public class Attendance {
 
     public enum Status {PRESENT, LATE, ABSENT, EXCUSED}
+    @PrePersist
+    protected void onCreate() {
+        checkedAt = LocalDateTime.now();
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
