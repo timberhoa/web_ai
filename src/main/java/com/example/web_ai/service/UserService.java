@@ -4,18 +4,23 @@ import com.example.web_ai.dto.request.ResetPassword;
 import com.example.web_ai.dto.request.UserRequest;
 import com.example.web_ai.dto.response.UserResponse;
 import com.example.web_ai.entity.User;
+import com.example.web_ai.exception.NotFoundException;
+import com.example.web_ai.mapper.UserMapper;
 import com.example.web_ai.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
     public UserResponse getUserById(UUID id) {
         User u = userRepository.findUserById(id)
@@ -29,6 +34,15 @@ public class UserService {
                 .phone(u.getPhone())
                 .role(u.getRole())
                 .build();
+    }
+
+    public UserResponse getUserByUsername(String username){
+        User user = userRepository.findUserByUsername(username)
+                .orElseThrow(() -> new NotFoundException("User Not Found"));
+
+        log.info("User: {}", user);
+
+        return userMapper.toResponse(user);
     }
 
     public UserResponse updateUser(UUID id, UserRequest req) {
