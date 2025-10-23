@@ -44,4 +44,8 @@ public class User {
 
     @Column(nullable = false)
     boolean active = true;
+
+    @ManyToOne
+    @JoinColumn(name = "faculty_id", nullable = true)
+    Faculty faculty;
 }

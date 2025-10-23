@@ -22,8 +22,8 @@ public class FacultyResponse {
                 .id(f.getId())
                 .code(f.getCode())
                 .name(f.getName())
-                .teacherId(f.getTeacher() != null ? f.getTeacher().getId() : null)
-                .teacherName(f.getTeacher() != null ? f.getTeacher().getFullName() : null)
+                .teacherId(f.getHead() != null ? f.getHead().getId() : null)
+                .teacherName(f.getHead() != null ? f.getHead().getFullName() : null)
                 .build();
     }
 }
