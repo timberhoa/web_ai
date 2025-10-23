@@ -1,8 +1,6 @@
 package com.example.web_ai.dto.request;
 
 import com.example.web_ai.entity.Attendance;
-import com.example.web_ai.entity.ClassSession;
-import com.example.web_ai.entity.User;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import java.util.UUID;

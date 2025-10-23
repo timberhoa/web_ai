@@ -12,6 +12,7 @@ import com.example.web_ai.repository.ClassSessionRepository;
 import com.example.web_ai.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -23,6 +24,7 @@ public class AttendanceService {
     private final ClassSessionRepository classSessionRepository;
     private final AttendanceMapper attendanceMapper;
 
+    @PreAuthorize("hasRole('TEACHER')")
     public CheckAttendanceResponse checkAttendance(CheckAttendanceRequest req){
 
         Attendance attendance = attendanceMapper.toEntity(req);

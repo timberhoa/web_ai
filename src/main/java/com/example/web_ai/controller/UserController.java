@@ -1,6 +1,7 @@
 package com.example.web_ai.controller;
 
 import com.example.web_ai.dto.request.ResetPassword;
+import com.example.web_ai.dto.request.UpdateProfileMeRequest;
 import com.example.web_ai.dto.request.UserRequest;
 import com.example.web_ai.dto.response.UserResponse;
 import com.example.web_ai.service.UserService;
@@ -24,12 +25,22 @@ public class UserController {
         return userService.getUserById(id);
     }
 
-    @PreAuthorize("hasAnyRole('LECTURER')")
+    @PreAuthorize("hasRole('TEACHER')")
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getMyProfile(Authentication authentication){
         String username = authentication.getName();
         log.info("🔹 Username from Authentication: {}", username);
         UserResponse res = userService.getUserByUsername(username);
+
+        return ResponseEntity.ok(res);
+    }
+
+    @PreAuthorize("hasRole('TEACHER')")
+    @PutMapping("/me")
+    public ResponseEntity<UserResponse> updateMyProfile(Authentication authentication, UpdateProfileMeRequest req){
+        String username = authentication.getName();
+        log.info("Req {}", req);
+        UserResponse res = userService.updateProfileMe(username, req);
 
         return ResponseEntity.ok(res);
     }
