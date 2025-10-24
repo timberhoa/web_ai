@@ -23,7 +23,6 @@ import static lombok.AccessLevel.PRIVATE;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-//    @Column(nullable = false, columnDefinition = "VARCHAR(36)")
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(nullable = false, length = 36)
     UUID id;

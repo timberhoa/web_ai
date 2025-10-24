@@ -31,9 +31,9 @@ public class Faculty {
     @JoinColumn(name = "head_id")
     User head;
 
-    @OneToMany(mappedBy = "faculty", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "faculty")
     List<User> users;
 
-    @OneToMany(mappedBy = "faculty", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "faculty")
     List<Course> courses;
 }
