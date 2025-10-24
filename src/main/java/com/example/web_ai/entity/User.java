@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.util.UUID;
 
@@ -21,7 +23,9 @@ import static lombok.AccessLevel.PRIVATE;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(nullable = false, columnDefinition = "CHAR(36)")
+//    @Column(nullable = false, columnDefinition = "VARCHAR(36)")
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(nullable = false, length = 36)
     UUID id;
 
     @Column(nullable = false)

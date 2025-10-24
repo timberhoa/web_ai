@@ -47,13 +47,10 @@ public class UserService {
     public UserResponse updateProfileMe(String username, UpdateProfileMeRequest req){
         User user = userRepository.findUserByUsername(username)
                 .orElseThrow(() -> new NotFoundException("User Not Found"));
-        log.info("User before update {}", user);
         if (req.getFullName() != null) user.setFullName(req.getFullName());
         if (req.getUsername() != null) user.setUsername(req.getUsername());
         if (req.getEmail() != null) user.setEmail(req.getEmail());
         if (req.getPhone() != null) user.setPhone(req.getPhone());
-
-        log.info("User after update {}", user);
 
         userRepository.save(user);
         return userMapper.toResponse(user);
