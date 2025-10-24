@@ -31,14 +31,12 @@ public class Course {
     String name;
 
     @ManyToOne
-    @JoinColumn(name = "teacher_id")
+    @JoinColumn(name = "lecturer_id")
     User teacher;
 
     Integer credits;
 
     @ManyToOne
-    @JoinColumn(name = "faculty_id")
+    @JoinColumn(name = "faculty_id", nullable = false)
     Faculty faculty;
-
-
 }

@@ -21,7 +21,7 @@ import static lombok.AccessLevel.PRIVATE;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "CHAR(36)")
     UUID id;
 
     @Column(nullable = false)
@@ -42,7 +42,10 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-
     @Column(nullable = false)
     boolean active = true;
+
+    @ManyToOne
+    @JoinColumn(name = "faculty_id", nullable = true)
+    Faculty faculty;
 }

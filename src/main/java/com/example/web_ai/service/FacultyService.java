@@ -43,7 +43,7 @@ public class FacultyService {
         Faculty f = Faculty.builder()
                 .code(req.getCode())
                 .name(req.getName())
-                .teacher(head)
+                .head(head)
                 .build();
 
         Faculty saved = facultyRepository.save(f);
@@ -67,7 +67,7 @@ public class FacultyService {
                     .orElseThrow(() -> new RuntimeException("TEACHER_NOT_FOUND"));
             if (!head.isActive()) throw new RuntimeException("TEACHER_INACTIVE");
             if (head.getRole() == Role.STUDENT) throw new RuntimeException("TEACHER_ROLE_INVALID");
-            f.setTeacher(head);
+            f.setHead(head);
         }
 
         Faculty saved = facultyRepository.save(f);

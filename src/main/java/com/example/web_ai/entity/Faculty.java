@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
 import java.util.UUID;
 
 import static lombok.AccessLevel.PRIVATE;
@@ -26,7 +27,13 @@ public class Faculty {
     @Column(nullable = false, length = 150)
     String name;
 
-    @ManyToOne
-    @JoinColumn(name = "teacher_id")
-    User teacher;
+    @OneToOne
+    @JoinColumn(name = "head_id")
+    User head;
+
+    @OneToMany(mappedBy = "faculty", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<User> users;
+
+    @OneToMany(mappedBy = "faculty", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<Course> courses;
 }
