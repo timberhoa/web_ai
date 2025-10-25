@@ -10,6 +10,8 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import static lombok.AccessLevel.PRIVATE;
@@ -51,4 +53,9 @@ public class User {
     @ManyToOne
     @JoinColumn(name = "faculty_id", nullable = true)
     Faculty faculty;
+
+    // Can add other column like avatarImage, backgroundImage if needed
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Image>  images = new ArrayList<>();
+
 }

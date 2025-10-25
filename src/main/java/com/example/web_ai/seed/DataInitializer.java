@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
@@ -56,23 +57,24 @@ public class DataInitializer {
             System.out.println("✅ Faculties created");
 
             // ======== STEP 2: CREATE USERS WITH FACULTY REFERENCES ========
+
             User student1 = new User(null, "Nguyen Van A", "studentA", "$2a$10$63ntGWUVmFWs0T6/mMwbdOm832a0P6KRcQw9JywzSuI33Ps5j4Xfq",
-                    "a@student.com", "0901111111", Role.STUDENT, true, itFaculty);
+                    "a@student.com", "0901111111", Role.STUDENT, true, itFaculty, new ArrayList<>());
 
             User student2 = new User(null, "Tran Thi B", "studentB", "$2a$10$63ntGWUVmFWs0T6/mMwbdOm832a0P6KRcQw9JywzSuI33Ps5j4Xfq",
-                    "b@student.com", "0902222222", Role.STUDENT, true, itFaculty);
+                    "b@student.com", "0902222222", Role.STUDENT, true, itFaculty, new ArrayList<>());
 
             User student3 = new User(null, "Le Van C", "studentC", "$2a$10$63ntGWUVmFWs0T6/mMwbdOm832a0P6KRcQw9JywzSuI33Ps5j4Xfq",
-                    "c@student.com", "0903333333", Role.STUDENT, true, businessFaculty);
+                    "c@student.com", "0903333333", Role.STUDENT, true, businessFaculty, new ArrayList<>());
 
             User teacher1 = new User(null, "Dr. Pham D", "teacherD", "$2a$10$63ntGWUVmFWs0T6/mMwbdOm832a0P6KRcQw9JywzSuI33Ps5j4Xfq",
-                    "d@teacher.com", "0904444444", Role.TEACHER, true, itFaculty);
+                    "d@teacher.com", "0904444444", Role.TEACHER, true, itFaculty, new ArrayList<>());
 
             User teacher2 = new User(null, "Dr. Nguyen E", "teacherE", "$2a$10$63ntGWUVmFWs0T6/mMwbdOm832a0P6KRcQw9JywzSuI33Ps5j4Xfq",
-                    "e@teacher.com", "0905555555", Role.TEACHER, true, businessFaculty);
+                    "e@teacher.com", "0905555555", Role.TEACHER, true, businessFaculty, new ArrayList<>());
 
             User admin = new User(null, "Admin System", "admin", "$2a$10$63ntGWUVmFWs0T6/mMwbdOm832a0P6KRcQw9JywzSuI33Ps5j4Xfq",
-                    "admin@system.com", "0906666666", Role.ADMIN, true, null);
+                    "admin@system.com", "0906666666", Role.ADMIN, true, null, new ArrayList<>());
 
             // Save users
             student1 = userRepository.save(student1);

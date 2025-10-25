@@ -4,15 +4,21 @@ import com.example.web_ai.dto.request.ResetPassword;
 import com.example.web_ai.dto.request.UpdateProfileMeRequest;
 import com.example.web_ai.dto.request.UserRequest;
 import com.example.web_ai.dto.response.UserResponse;
+import com.example.web_ai.entity.Image;
 import com.example.web_ai.entity.User;
 import com.example.web_ai.exception.NotFoundException;
 import com.example.web_ai.mapper.UserMapper;
+import com.example.web_ai.repository.ImageRepository;
 import com.example.web_ai.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.util.Base64;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -21,6 +27,7 @@ import java.util.UUID;
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ImageRepository imageRepository;
     private final UserMapper userMapper;
 
     public UserResponse getUserById(UUID id) {
@@ -99,5 +106,31 @@ public class UserService {
 
         u.setPassword(passwordEncoder.encode(req.getNewPassword()));
         userRepository.save(u);
+    }
+
+    public void uploadImage(UUID userId, MultipartFile file) throws IOException{
+        User user = userRepository.findUserById(userId)
+                .orElseThrow(() -> new NotFoundException("User Not Found"));
+
+        byte[] imageBytes = file.getBytes();
+        String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+        String base65WithPrefix = "data:" + file.getContentType() + ";base64," + base64Image;
+        Image image = Image.builder()
+                        .imageData(base65WithPrefix)
+                        .contentType(file.getContentType())
+                        .fileName(file.getOriginalFilename())
+                        .fileSize(file.getSize())
+                        .user(user)
+                        .build();
+        user.getImages().add(image);
+
+        userRepository.save(user);
+    }
+
+    public Image getImage(UUID imageId) {
+        Image image = imageRepository.findById(imageId)
+                .orElseThrow(() -> new NotFoundException("Image Not Found"));
+
+        return image;
     }
 }
