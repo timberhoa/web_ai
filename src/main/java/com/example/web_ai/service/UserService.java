@@ -3,6 +3,7 @@ package com.example.web_ai.service;
 import com.example.web_ai.dto.request.ResetPassword;
 import com.example.web_ai.dto.request.UpdateProfileMeRequest;
 import com.example.web_ai.dto.request.UserRequest;
+import com.example.web_ai.dto.response.GradeResponse;
 import com.example.web_ai.dto.response.UserResponse;
 import com.example.web_ai.entity.Image;
 import com.example.web_ai.entity.User;
@@ -132,5 +133,10 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("Image Not Found"));
 
         return image;
+    }
+
+    public GradeResponse getALlGrade(UUID userId){
+        // necessary logic to get all grade here
+        return GradeResponse.builder().message("Retrieve successfully").build();
     }
 }

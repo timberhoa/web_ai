@@ -3,6 +3,7 @@ package com.example.web_ai.controller;
 import com.example.web_ai.dto.request.ResetPassword;
 import com.example.web_ai.dto.request.UpdateProfileMeRequest;
 import com.example.web_ai.dto.request.UserRequest;
+import com.example.web_ai.dto.response.GradeResponse;
 import com.example.web_ai.dto.response.UploadImageResponse;
 import com.example.web_ai.dto.response.UserResponse;
 import com.example.web_ai.entity.Image;
@@ -61,6 +62,16 @@ public class UserController {
     @PutMapping("/updatePassword/{id}")
     public void updatePassword(@RequestParam UUID id, @RequestBody ResetPassword req) {
         userService.updatePassword(id, req);
+    }
+
+    @GetMapping(value = "grades")
+    public ResponseEntity<GradeResponse> getAllGrade(Authentication authentication){
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String userIdString = jwt.getClaim("id");
+
+        UUID userId = UUID.fromString(userIdString);
+
+        return ResponseEntity.ok(userService.getALlGrade(userId));
     }
 
     @GetMapping(value = "/image/{imageId}")
