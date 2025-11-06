@@ -49,4 +49,9 @@ public class CourseController {
         return ResponseEntity.ok(courseService.getListCourseByFaculty(faculty_code));
     }
 
+    @GetMapping("/admin/all")
+    public ResponseEntity<List<CourseResponse>> getAllCoursesForAdmin() {
+        return ResponseEntity.ok(courseService.getAllCoursesForAdmin());
+    }
+
 }

@@ -18,6 +18,7 @@ public class CourseResponse {
     String code;
     String name;
     UUID teacher_id;
+    String teacher_name;
     Integer credits;
     String faculty_code;
     String faculty_name;
@@ -28,6 +29,7 @@ public class CourseResponse {
                 .code(c.getCode())
                 .name(c.getName())
                 .teacher_id(c.getTeacher() != null ? c.getTeacher().getId() : null)
+                .teacher_name(c.getTeacher() != null ? c.getTeacher().getFullName() : null)
                 .credits(c.getCredits())
                 .faculty_code(c.getFaculty() != null ? c.getFaculty().getCode() : null)
                 .faculty_name(c.getFaculty() != null ? c.getFaculty().getName() : null)

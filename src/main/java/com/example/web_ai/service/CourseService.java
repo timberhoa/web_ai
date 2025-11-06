@@ -123,4 +123,11 @@ public class CourseService {
                 .collect(Collectors.toList());
     }
 
+    // Method chỉ dành cho ADMIN để lấy tất cả course
+    public List<CourseResponse> getAllCoursesForAdmin() {
+        return courseRepository.findAll().stream()
+                .map(CourseResponse::fromEntity)
+                .collect(Collectors.toList());
+    }
+
 }
