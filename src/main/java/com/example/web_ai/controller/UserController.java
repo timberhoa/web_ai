@@ -19,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -113,5 +114,12 @@ public class UserController {
             return ResponseEntity.badRequest().body(UploadImageResponse.builder()
                     .message("Failed to upload image").id(userId).build());
         }
+    }
+
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
+    @GetMapping("/students")
+    public ResponseEntity<List<UserResponse>> getAllStudents() {
+        List<UserResponse> students = userService.getAllStudents();
+        return ResponseEntity.ok(students);
     }
 }

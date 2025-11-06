@@ -3,10 +3,12 @@ package com.example.web_ai.service;
 import com.example.web_ai.dto.request.ResetPassword;
 import com.example.web_ai.dto.request.UpdateProfileMeRequest;
 import com.example.web_ai.dto.request.UserRequest;
+import com.example.web_ai.dto.response.FacultySimpleResponse;
 import com.example.web_ai.dto.response.GradeResponse;
 import com.example.web_ai.dto.response.UserResponse;
 import com.example.web_ai.entity.Image;
 import com.example.web_ai.entity.User;
+import com.example.web_ai.enums.Role;
 import com.example.web_ai.exception.NotFoundException;
 import com.example.web_ai.mapper.UserMapper;
 import com.example.web_ai.repository.ImageRepository;
@@ -21,6 +23,7 @@ import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -35,6 +38,15 @@ public class UserService {
         User u = userRepository.findUserById(id)
                 .orElseThrow(() -> new RuntimeException("USER_NOT_FOUND"));
 
+        FacultySimpleResponse facultyResponse = null;
+        if (u.getFaculty() != null) {
+            facultyResponse = FacultySimpleResponse.builder()
+                    .id(u.getFaculty().getId())
+                    .code(u.getFaculty().getCode())
+                    .name(u.getFaculty().getName())
+                    .build();
+        }
+
         return UserResponse.builder()
                 .id(u.getId())
                 .fullName(u.getFullName())
@@ -42,6 +54,8 @@ public class UserService {
                 .email(u.getEmail())
                 .phone(u.getPhone())
                 .role(u.getRole())
+                .active(u.isActive())
+                .faculty(facultyResponse)
                 .build();
     }
 
@@ -138,5 +152,33 @@ public class UserService {
     public GradeResponse getALlGrade(UUID userId){
         // necessary logic to get all grade here
         return GradeResponse.builder().message("Retrieve successfully").build();
+    }
+
+    public List<UserResponse> getAllStudents() {
+        List<User> students = userRepository.findByRole(Role.STUDENT);
+        
+        return students.stream()
+                .map(student -> {
+                    FacultySimpleResponse facultyResponse = null;
+                    if (student.getFaculty() != null) {
+                        facultyResponse = FacultySimpleResponse.builder()
+                                .id(student.getFaculty().getId())
+                                .code(student.getFaculty().getCode())
+                                .name(student.getFaculty().getName())
+                                .build();
+                    }
+                    
+                    return UserResponse.builder()
+                            .id(student.getId())
+                            .fullName(student.getFullName())
+                            .username(student.getUsername())
+                            .email(student.getEmail())
+                            .phone(student.getPhone())
+                            .role(student.getRole())
+                            .active(student.isActive())
+                            .faculty(facultyResponse)
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 }

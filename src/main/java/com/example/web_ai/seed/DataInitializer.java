@@ -331,6 +331,14 @@ public class DataInitializer {
             System.out.println("   - 17 Enrollments created");
             System.out.println("   - 11 Attendance records created");
             System.out.println("🎯 Ready to test faculty stats and attendance stats endpoints!");
+            
+            // In ra các sessionId để test
+            System.out.println("\n📋 Available Session IDs for testing:");
+            System.out.println("   Session 1 (IT101): " + session1.getId());
+            System.out.println("   Session 2 (IT101): " + session2.getId());
+            System.out.println("   Session 3 (IT201): " + session3.getId());
+            System.out.println("   Session 4 (BUS101): " + session4.getId());
+            System.out.println("   Session 5 (ENG101): " + session5.getId());
         };
     }
 }

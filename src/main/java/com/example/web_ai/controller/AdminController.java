@@ -2,6 +2,7 @@ package com.example.web_ai.controller;
 
 import com.example.web_ai.dto.request.UserRequest;
 import com.example.web_ai.dto.response.AttendanceStatsResponse;
+import com.example.web_ai.dto.response.ClassSessionResponse;
 import com.example.web_ai.dto.response.FacultyStudentStatsResponse;
 import com.example.web_ai.dto.response.UserResponse;
 import com.example.web_ai.enums.Role;
@@ -56,5 +57,56 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getAttendanceStatsBySession(sessionId));
     }
 
+    @GetMapping("/sessions")
+    public ResponseEntity<List<ClassSessionResponse>> getAllClassSessions() {
+        return ResponseEntity.ok(adminService.getAllClassSessions());
+    }
 
+    @GetMapping("/debug/session/{sessionId}")
+    public ResponseEntity<String> debugSession(@PathVariable UUID sessionId) {
+        try {
+            // Debug thông tin session
+            return ResponseEntity.ok("Debug info for session: " + sessionId);
+        } catch (Exception e) {
+            return ResponseEntity.ok("Error: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/debug/first-session-id")
+    public ResponseEntity<String> getFirstSessionId() {
+        return ResponseEntity.ok(adminService.getFirstSessionId());
+    }
+
+    @GetMapping("/debug/sessions-with-attendance")
+    public ResponseEntity<List<String>> getSessionsWithAttendance() {
+        return ResponseEntity.ok(adminService.getSessionsWithAttendance());
+    }
+
+}
+
+// Tạo controller riêng cho debug không cần auth
+@RestController
+@RequestMapping("/api/debug")
+class DebugController {
+    
+    private final AdminService adminService;
+    
+    public DebugController(AdminService adminService) {
+        this.adminService = adminService;
+    }
+
+    @GetMapping("/sessions")
+    public ResponseEntity<List<String>> getAllSessions() {
+        return ResponseEntity.ok(adminService.getSessionsWithAttendance());
+    }
+
+    @GetMapping("/first-session-id")
+    public ResponseEntity<String> getFirstSessionId() {
+        return ResponseEntity.ok(adminService.getFirstSessionId());
+    }
+
+    @GetMapping("/test-attendance/{sessionId}")
+    public ResponseEntity<AttendanceStatsResponse> testAttendance(@PathVariable UUID sessionId) {
+        return ResponseEntity.ok(adminService.getAttendanceStatsBySession(sessionId));
+    }
 }

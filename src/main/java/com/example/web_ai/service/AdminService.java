@@ -2,12 +2,15 @@ package com.example.web_ai.service;
 
 import com.example.web_ai.dto.request.UserRequest;
 import com.example.web_ai.dto.response.AttendanceStatsResponse;
+import com.example.web_ai.dto.response.ClassSessionResponse;
 import com.example.web_ai.dto.response.FacultyStudentStatsResponse;
 import com.example.web_ai.dto.response.UserResponse;
+import com.example.web_ai.entity.ClassSession;
 import com.example.web_ai.entity.User;
 import com.example.web_ai.enums.Role;
 import com.example.web_ai.repository.AttendanceRespository;
 import com.example.web_ai.repository.AuthRepository;
+import com.example.web_ai.repository.ClassSessionRepository;
 import com.example.web_ai.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,6 +27,7 @@ import java.util.stream.Collectors;
 public class AdminService {
     private final UserRepository userRepository;
     private final AttendanceRespository attendanceRespository;
+    private final ClassSessionRepository classSessionRepository;
     private final PasswordEncoder passwordEncoder;
 
 
@@ -165,38 +169,89 @@ public class AdminService {
     }
 
     public AttendanceStatsResponse getAttendanceStatsBySession(UUID sessionId) {
+        // Kiểm tra session có tồn tại không
+        ClassSession session = classSessionRepository.findClassSessionById(sessionId)
+                .orElseThrow(() -> new RuntimeException("SESSION_NOT_FOUND"));
+
         Object[] result = attendanceRespository.findAttendanceStatsBySessionId(sessionId);
         
-        if (result == null) {
-            throw new RuntimeException("SESSION_NOT_FOUND");
+        if (result == null || result.length == 0) {
+            // Nếu không có dữ liệu attendance, tạo response với dữ liệu từ session
+            return AttendanceStatsResponse.builder()
+                    .sessionId(sessionId)
+                    .courseName(session.getCourse().getName())
+                    .courseCode(session.getCourse().getCode())
+                    .roomName(session.getRoomName())
+                    .totalEnrolledStudents(0L)
+                    .presentStudents(0L)
+                    .lateStudents(0L)
+                    .absentStudents(0L)
+                    .excusedStudents(0L)
+                    .attendanceRate(0.0)
+                    .build();
         }
 
-        UUID sessionIdResult = (UUID) result[0];
-        String courseName = (String) result[1];
-        String courseCode = (String) result[2];
-        String roomName = (String) result[3];
-        Long totalEnrolled = (Long) result[4];
-        Long presentCount = result[5] != null ? ((Number) result[5]).longValue() : 0L;
-        Long lateCount = result[6] != null ? ((Number) result[6]).longValue() : 0L;
-        Long absentCount = result[7] != null ? ((Number) result[7]).longValue() : 0L;
-        Long excusedCount = result[8] != null ? ((Number) result[8]).longValue() : 0L;
+        try {
+            // Parse kết quả từ query
+            String courseName = result[0] != null ? result[0].toString() : session.getCourse().getName();
+            String courseCode = result[1] != null ? result[1].toString() : session.getCourse().getCode();
+            String roomName = result[2] != null ? result[2].toString() : session.getRoomName();
+            Long totalEnrolled = result[3] != null ? ((Number) result[3]).longValue() : 0L;
+            Long presentCount = result[4] != null ? ((Number) result[4]).longValue() : 0L;
+            Long lateCount = result[5] != null ? ((Number) result[5]).longValue() : 0L;
+            Long absentCount = result[6] != null ? ((Number) result[6]).longValue() : 0L;
+            Long excusedCount = result[7] != null ? ((Number) result[7]).longValue() : 0L;
 
-        // Tính tỉ lệ có mặt (present + late) / total enrolled
-        Double attendanceRate = totalEnrolled > 0 ? 
-            ((double) (presentCount + lateCount) / totalEnrolled) * 100 : 0.0;
+            // Tính tỉ lệ có mặt (present + late) / total enrolled
+            Double attendanceRate = totalEnrolled > 0 ? 
+                ((double) (presentCount + lateCount) / totalEnrolled) * 100 : 0.0;
 
-        return AttendanceStatsResponse.builder()
-                .sessionId(sessionIdResult)
-                .courseName(courseName)
-                .courseCode(courseCode)
-                .roomName(roomName)
-                .totalEnrolledStudents(totalEnrolled)
-                .presentStudents(presentCount)
-                .lateStudents(lateCount)
-                .absentStudents(absentCount)
-                .excusedStudents(excusedCount)
-                .attendanceRate(Math.round(attendanceRate * 100.0) / 100.0) // Làm tròn 2 chữ số
-                .build();
+            return AttendanceStatsResponse.builder()
+                    .sessionId(sessionId)
+                    .courseName(courseName)
+                    .courseCode(courseCode)
+                    .roomName(roomName)
+                    .totalEnrolledStudents(totalEnrolled)
+                    .presentStudents(presentCount)
+                    .lateStudents(lateCount)
+                    .absentStudents(absentCount)
+                    .excusedStudents(excusedCount)
+                    .attendanceRate(Math.round(attendanceRate * 100.0) / 100.0) // Làm tròn 2 chữ số
+                    .build();
+        } catch (Exception e) {
+            throw new RuntimeException("Error processing attendance stats: " + e.getMessage() + " (Array length: " + result.length + ")");
+        }
+    }
+
+    public List<ClassSessionResponse> getAllClassSessions() {
+        List<ClassSession> sessions = classSessionRepository.findAll();
+        
+        return sessions.stream()
+                .map(session -> ClassSessionResponse.builder()
+                        .sessionId(session.getId())
+                        .courseName(session.getCourse().getName())
+                        .courseCode(session.getCourse().getCode())
+                        .roomName(session.getRoomName())
+                        .startTime(session.getStartTime())
+                        .endTime(session.getEndTime())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    public String getFirstSessionId() {
+        List<ClassSession> sessions = classSessionRepository.findAll();
+        if (!sessions.isEmpty()) {
+            return sessions.get(0).getId().toString();
+        }
+        return "No sessions found";
+    }
+
+    public List<String> getSessionsWithAttendance() {
+        List<ClassSession> sessions = classSessionRepository.findAll();
+        return sessions.stream()
+                .map(session -> session.getId().toString() + " - " + 
+                      session.getCourse().getName() + " (" + session.getRoomName() + ")")
+                .collect(Collectors.toList());
     }
 
 
