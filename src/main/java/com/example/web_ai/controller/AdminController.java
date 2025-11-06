@@ -1,6 +1,8 @@
 package com.example.web_ai.controller;
 
 import com.example.web_ai.dto.request.UserRequest;
+import com.example.web_ai.dto.response.AttendanceStatsResponse;
+import com.example.web_ai.dto.response.FacultyStudentStatsResponse;
 import com.example.web_ai.dto.response.UserResponse;
 import com.example.web_ai.enums.Role;
 import com.example.web_ai.service.AdminService;
@@ -42,6 +44,16 @@ public class AdminController {
     public ResponseEntity<UserResponse> updateUser(@PathVariable UUID id,
                                                    @RequestBody UserRequest req) {
         return ResponseEntity.ok(adminService.updateUser(id, req));
+    }
+
+    @GetMapping("/stats/faculty-students")
+    public ResponseEntity<List<FacultyStudentStatsResponse>> getFacultyStudentStats() {
+        return ResponseEntity.ok(adminService.getFacultyStudentStats());
+    }
+
+    @GetMapping("/stats/attendance/{sessionId}")
+    public ResponseEntity<AttendanceStatsResponse> getAttendanceStatsBySession(@PathVariable UUID sessionId) {
+        return ResponseEntity.ok(adminService.getAttendanceStatsBySession(sessionId));
     }
 
 
