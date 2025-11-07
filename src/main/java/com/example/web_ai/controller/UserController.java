@@ -10,6 +10,9 @@ import com.example.web_ai.entity.Image;
 import com.example.web_ai.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -123,8 +126,9 @@ public class UserController {
 
     @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     @GetMapping("/students")
-    public ResponseEntity<List<UserResponse>> getAllStudents() {
-        List<UserResponse> students = userService.getAllStudents();
+    public ResponseEntity<Page<UserResponse>> getAllStudents(
+            @PageableDefault(size = 15, sort = "fullName") Pageable pageable) {
+        Page<UserResponse> students = userService.getAllStudents(pageable);
         return ResponseEntity.ok(students);
     }
 }

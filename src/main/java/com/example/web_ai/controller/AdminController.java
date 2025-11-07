@@ -8,6 +8,9 @@ import com.example.web_ai.dto.response.UserResponse;
 import com.example.web_ai.enums.Role;
 import com.example.web_ai.service.AdminService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -23,13 +26,16 @@ public class AdminController {
     private final AdminService adminService;
 
     @GetMapping("/users")
-    public ResponseEntity<List<UserResponse>> getAllUsers() {
-        return ResponseEntity.ok(adminService.getUser());
+    public ResponseEntity<Page<UserResponse>> getAllUsers(
+            @PageableDefault(size = 10, sort = "fullName") Pageable pageable) {
+        return ResponseEntity.ok(adminService.getUser(pageable));
     }
 
     @GetMapping("/users/filter")
-    public ResponseEntity<List<UserResponse>> filterUsers(@RequestParam("role") Role role) {
-        return ResponseEntity.ok(adminService.filter(role));
+    public ResponseEntity<Page<UserResponse>> filterUsers(
+            @RequestParam("role") Role role,
+            @PageableDefault(size = 10, sort = "fullName") Pageable pageable) {
+        return ResponseEntity.ok(adminService.filter(role, pageable));
     }
 
     @PostMapping("/addUser")
@@ -60,7 +66,8 @@ public class AdminController {
     }
 
     @GetMapping("/sessions")
-    public ResponseEntity<List<ClassSessionResponse>> getAllClassSessions() {
-        return ResponseEntity.ok(adminService.getAllClassSessions());
+    public ResponseEntity<Page<ClassSessionResponse>> getAllClassSessions(
+            @PageableDefault(size = 10, sort = "startTime") Pageable pageable) {
+        return ResponseEntity.ok(adminService.getAllClassSessions(pageable));
     }
 }

@@ -2,6 +2,8 @@ package com.example.web_ai.repository;
 
 import com.example.web_ai.entity.User;
 import com.example.web_ai.enums.Role;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -13,6 +15,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findUserById(UUID id);
     Optional<User> findUserByUsername(String username);
     List<User> findByRole(Role role);
+    Page<User> findByRole(Role role, Pageable pageable);
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
     boolean existsByPhone(String phone);

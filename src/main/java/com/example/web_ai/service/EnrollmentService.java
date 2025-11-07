@@ -5,6 +5,9 @@ import com.example.web_ai.entity.Enrollment;
 import com.example.web_ai.repository.EnrollmentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,20 +19,18 @@ import java.util.UUID;
 public class EnrollmentService {
     private final EnrollmentRepository enrollmentRepository;
 
-    public List<CourseResponse> getAllCoursesByStudentId(UUID studentId){
-        List<Enrollment> enrollments = enrollmentRepository.findByStudent_IdWithCourseDetails(studentId);
+    public Page<CourseResponse> getAllCoursesByStudentId(UUID studentId, Pageable pageable){
+        Page<Enrollment> enrollments = enrollmentRepository.findByStudent_IdWithCourseDetails(studentId, pageable);
 
-        log.info("🔹 Enrollments: {}", enrollments.size());
+        log.info("🔹 Enrollments: {}", enrollments.getTotalElements());
 
-        return enrollments.stream()
-                .map(enrollment -> {
-                    log.info("🔹 Enrollment ID: {}, Course Name: {}, Course Code: {}",
-                            enrollment.getId(),
-                            enrollment.getCourse().getName(),
-                            enrollment.getCourse().getCode());
+        return enrollments.map(enrollment -> {
+            log.info("🔹 Enrollment ID: {}, Course Name: {}, Course Code: {}",
+                    enrollment.getId(),
+                    enrollment.getCourse().getName(),
+                    enrollment.getCourse().getCode());
 
-                    return CourseResponse.fromEntity(enrollment.getCourse());
-                })
-                .toList();
+            return CourseResponse.fromEntity(enrollment.getCourse());
+        });
     }
 }

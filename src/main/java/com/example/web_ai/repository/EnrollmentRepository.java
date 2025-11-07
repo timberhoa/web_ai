@@ -1,6 +1,8 @@
 package com.example.web_ai.repository;
 
 import com.example.web_ai.entity.Enrollment;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,6 +19,14 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, UUID> {
            "LEFT JOIN FETCH c.faculty " +
            "WHERE e.student.id = :studentId")
     List<Enrollment> findByStudent_IdWithCourseDetails(@Param("studentId") UUID studentId);
+    
+    // Pagination version with JOIN FETCH
+    @Query("SELECT e FROM Enrollment e " +
+           "JOIN FETCH e.course c " +
+           "LEFT JOIN FETCH c.teacher " +
+           "LEFT JOIN FETCH c.faculty " +
+           "WHERE e.student.id = :studentId")
+    Page<Enrollment> findByStudent_IdWithCourseDetails(@Param("studentId") UUID studentId, Pageable pageable);
     
     // Keep the original method for backward compatibility
     List<Enrollment> findByStudent_Id(UUID id);

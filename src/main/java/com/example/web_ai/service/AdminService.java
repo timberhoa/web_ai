@@ -15,6 +15,8 @@ import com.example.web_ai.repository.AttendanceRespository;
 import com.example.web_ai.repository.ClassSessionRepository;
 import com.example.web_ai.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -34,18 +36,14 @@ public class AdminService {
     private final UserMapper userMapper;
 
 
-    public List<UserResponse> getUser() {
-        List<User> users = userRepository.findAll();
-        return users.stream()
-                .map(userMapper::toResponse)
-                .collect(Collectors.toList());
+    public Page<UserResponse> getUser(Pageable pageable) {
+        Page<User> users = userRepository.findAll(pageable);
+        return users.map(userMapper::toResponse);
     }
 
-    public List<UserResponse> filter(Role req) {
-        List<User> users = userRepository.findByRole(req);
-        return users.stream()
-                .map(userMapper::toResponse)
-                .collect(Collectors.toList());
+    public Page<UserResponse> filter(Role role, Pageable pageable) {
+        Page<User> users = userRepository.findByRole(role, pageable);
+        return users.map(userMapper::toResponse);
     }
 
     public UserResponse addUser(UserRequest req) {
@@ -195,19 +193,17 @@ public class AdminService {
         }
     }
 
-    public List<ClassSessionResponse> getAllClassSessions() {
-        List<ClassSession> sessions = classSessionRepository.findAll();
+    public Page<ClassSessionResponse> getAllClassSessions(Pageable pageable) {
+        Page<ClassSession> sessions = classSessionRepository.findAll(pageable);
         
-        return sessions.stream()
-                .map(session -> ClassSessionResponse.builder()
-                        .sessionId(session.getId())
-                        .courseName(session.getCourse().getName())
-                        .courseCode(session.getCourse().getCode())
-                        .roomName(session.getRoomName())
-                        .startTime(session.getStartTime())
-                        .endTime(session.getEndTime())
-                        .build())
-                .collect(Collectors.toList());
+        return sessions.map(session -> ClassSessionResponse.builder()
+                .sessionId(session.getId())
+                .courseName(session.getCourse().getName())
+                .courseCode(session.getCourse().getCode())
+                .roomName(session.getRoomName())
+                .startTime(session.getStartTime())
+                .endTime(session.getEndTime())
+                .build());
     }
 
     public String getFirstSessionId() {

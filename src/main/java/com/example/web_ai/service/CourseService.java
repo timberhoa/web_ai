@@ -11,6 +11,8 @@ import com.example.web_ai.repository.CourseRepository;
 import com.example.web_ai.repository.FacultyRepository;
 import com.example.web_ai.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
@@ -108,28 +110,25 @@ public class CourseService {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','STUDENT')")
-    public List<CourseResponse> listCourses() {
-        return courseRepository.findAll().stream()
-                .map(CourseResponse::fromEntity)
-                .collect(Collectors.toList());
+    public Page<CourseResponse> listCourses(Pageable pageable) {
+        Page<Course> courses = courseRepository.findAll(pageable);
+        return courses.map(CourseResponse::fromEntity);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','STUDENT')")
-    public List<CourseResponse> getListCourseByFaculty(String facultyCode) {
+    public Page<CourseResponse> getListCourseByFaculty(String facultyCode, Pageable pageable) {
         if (facultyCode == null) throw new BadRequestException("FACULTY_CODE_REQUIRED");
         if (!facultyRepository.existsByCode(facultyCode)) {
             throw new NotFoundException("FACULTY_NOT_FOUND");
         }
-        return courseRepository.findAllByFaculty_code(facultyCode).stream()
-                .map(CourseResponse::fromEntity)
-                .collect(Collectors.toList());
+        Page<Course> courses = courseRepository.findAllByFaculty_code(facultyCode, pageable);
+        return courses.map(CourseResponse::fromEntity);
     }
 
     // Method chỉ dành cho ADMIN để lấy tất cả course
-    public List<CourseResponse> getAllCoursesForAdmin() {
-        return courseRepository.findAll().stream()
-                .map(CourseResponse::fromEntity)
-                .collect(Collectors.toList());
+    public Page<CourseResponse> getAllCoursesForAdmin(Pageable pageable) {
+        Page<Course> courses = courseRepository.findAll(pageable);
+        return courses.map(CourseResponse::fromEntity);
     }
 
 }

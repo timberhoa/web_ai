@@ -16,6 +16,8 @@ import com.example.web_ai.repository.ImageRepository;
 import com.example.web_ai.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -132,11 +134,9 @@ public class UserService {
         return GradeResponse.builder().message("Retrieve successfully").build();
     }
 
-    public List<UserResponse> getAllStudents() {
-        List<User> students = userRepository.findByRole(Role.STUDENT);
+    public Page<UserResponse> getAllStudents(Pageable pageable) {
+        Page<User> students = userRepository.findByRole(Role.STUDENT, pageable);
         
-        return students.stream()
-                .map(userMapper::toResponse)
-                .collect(Collectors.toList());
+        return students.map(userMapper::toResponse);
     }
 }
