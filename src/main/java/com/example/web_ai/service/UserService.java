@@ -139,4 +139,26 @@ public class UserService {
         
         return students.map(userMapper::toResponse);
     }
+
+    public Page<UserResponse> searchUsers(String searchTerm, String roleStr, Pageable pageable) {
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
+            throw new BadRequestException("SEARCH_TERM_REQUIRED");
+        }
+
+        String trimmedSearchTerm = searchTerm.trim();
+        Page<User> users;
+
+        if (roleStr != null && !roleStr.trim().isEmpty()) {
+            try {
+                Role role = Role.valueOf(roleStr.toUpperCase().trim());
+                users = userRepository.searchByMultipleFieldsAndRole(trimmedSearchTerm, role, pageable);
+            } catch (IllegalArgumentException e) {
+                throw new BadRequestException("INVALID_ROLE: " + roleStr);
+            }
+        } else {
+            users = userRepository.searchByMultipleFields(trimmedSearchTerm, pageable);
+        }
+
+        return users.map(userMapper::toResponse);
+    }
 }

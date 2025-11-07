@@ -131,4 +131,14 @@ public class UserController {
         Page<UserResponse> students = userService.getAllStudents(pageable);
         return ResponseEntity.ok(students);
     }
+
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
+    @GetMapping("/search")
+    public ResponseEntity<Page<UserResponse>> searchUsers(
+            @RequestParam("q") String searchTerm,
+            @RequestParam(value = "role", required = false) String role,
+            @PageableDefault(size = 10, sort = "fullName") Pageable pageable) {
+        Page<UserResponse> users = userService.searchUsers(searchTerm, role, pageable);
+        return ResponseEntity.ok(users);
+    }
 }
