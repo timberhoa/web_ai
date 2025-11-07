@@ -13,4 +13,7 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
     List<Course> findAllByFaculty_id(UUID facultyId);
     List<Course> findAllByFaculty_code(String code);
     Page<Course> findAllByFaculty_code(String code, Pageable pageable);
+    
+    // Search by name with pagination - case insensitive, partial match
+    Page<Course> findByNameContainingIgnoreCase(String name, Pageable pageable);
 }

@@ -61,4 +61,11 @@ public class CourseController {
         return ResponseEntity.ok(courseService.getAllCoursesForAdmin(pageable));
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<Page<CourseResponse>> searchCoursesByName(
+            @RequestParam("name") String name,
+            @PageableDefault(size = 10, sort = "name") Pageable pageable) {
+        return ResponseEntity.ok(courseService.searchCoursesByName(name, pageable));
+    }
+
 }

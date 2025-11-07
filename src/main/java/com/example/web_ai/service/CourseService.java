@@ -131,4 +131,14 @@ public class CourseService {
         return courses.map(CourseResponse::fromEntity);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','STUDENT','TEACHER')")
+    public Page<CourseResponse> searchCoursesByName(String name, Pageable pageable) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new BadRequestException("SEARCH_NAME_REQUIRED");
+        }
+        
+        Page<Course> courses = courseRepository.findByNameContainingIgnoreCase(name.trim(), pageable);
+        return courses.map(CourseResponse::fromEntity);
+    }
+
 }
