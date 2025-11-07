@@ -7,7 +7,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.UUID;
 
-public interface AttendanceRespository extends JpaRepository<Attendance, Long> {
+public interface AttendanceRespository extends JpaRepository<Attendance, UUID> {
 
     @Query("SELECT " +
            "c.name as courseName, " +

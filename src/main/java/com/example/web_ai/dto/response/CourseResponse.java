@@ -24,6 +24,8 @@ public class CourseResponse {
     String faculty_name;
 
     public static CourseResponse fromEntity(Course c) {
+        if (c == null) return null;
+        
         return CourseResponse.builder()
                 .id(c.getId())
                 .code(c.getCode())

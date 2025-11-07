@@ -29,6 +29,7 @@ import java.util.UUID;
 public class UserController {
     private final UserService userService;
 
+    @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
     @GetMapping("/getUserById")
     public UserResponse getUserByUsername(@RequestParam UUID id) {
         return userService.getUserById(id);
@@ -54,17 +55,21 @@ public class UserController {
         return ResponseEntity.ok(res);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> update(@PathVariable UUID id,
                                                @RequestBody UserRequest req) {
         return ResponseEntity.ok(userService.updateUser(id, req));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','STUDENT','TEACHER')")
     @PutMapping("/updatePassword/{id}")
-    public void updatePassword(@RequestParam UUID id, @RequestBody ResetPassword req) {
+    public ResponseEntity<String> updatePassword(@PathVariable UUID id, @RequestBody ResetPassword req) {
         userService.updatePassword(id, req);
+        return ResponseEntity.ok("Password updated successfully");
     }
 
+    @PreAuthorize("hasRole('STUDENT')")
     @GetMapping(value = "grades")
     public ResponseEntity<GradeResponse> getAllGrade(Authentication authentication){
         Jwt jwt = (Jwt) authentication.getPrincipal();

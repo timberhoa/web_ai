@@ -7,6 +7,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
+import java.util.UUID;
+
 import static lombok.AccessLevel.PRIVATE;
 
 @Data
@@ -32,5 +34,8 @@ public class UserRequest {
 
     @NotNull
     Boolean active;
+
+    // Optional faculty ID - null for users without faculty (like admins)
+    UUID facultyId;
 
 }

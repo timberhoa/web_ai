@@ -31,9 +31,8 @@ public class Faculty {
     @Column(nullable = false, length = 150)
     String name;
 
-    @OneToOne
-    @JoinColumn(name = "head_id")
-    User head;
+    // Removed head field to avoid circular dependency
+    // Head information can be managed through User role or separate table if needed
 
     @OneToMany(mappedBy = "faculty")
     List<User> users;

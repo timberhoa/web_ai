@@ -8,8 +8,10 @@ import com.example.web_ai.dto.response.UserResponse;
 import com.example.web_ai.entity.ClassSession;
 import com.example.web_ai.entity.User;
 import com.example.web_ai.enums.Role;
+import com.example.web_ai.exception.BadRequestException;
+import com.example.web_ai.exception.NotFoundException;
+import com.example.web_ai.mapper.UserMapper;
 import com.example.web_ai.repository.AttendanceRespository;
-import com.example.web_ai.repository.AuthRepository;
 import com.example.web_ai.repository.ClassSessionRepository;
 import com.example.web_ai.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,52 +31,39 @@ public class AdminService {
     private final AttendanceRespository attendanceRespository;
     private final ClassSessionRepository classSessionRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
 
     public List<UserResponse> getUser() {
         List<User> users = userRepository.findAll();
         return users.stream()
-                .map(u -> UserResponse.builder()
-                        .id(u.getId())
-                        .fullName(u.getFullName())
-                        .username(u.getUsername())
-                        .email(u.getEmail())
-                        .phone(u.getPhone())
-                        .role(u.getRole())
-                        .build())
+                .map(userMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
     public List<UserResponse> filter(Role req) {
         List<User> users = userRepository.findByRole(req);
         return users.stream()
-                .map(u -> UserResponse.builder()
-                        .id(u.getId())
-                        .fullName(u.getFullName())
-                        .username(u.getUsername())
-                        .email(u.getEmail())
-                        .phone(u.getPhone())
-                        .role(u.getRole())
-                        .build())
+                .map(userMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
     public UserResponse addUser(UserRequest req) {
         if (req.getUsername() == null || req.getUsername().isBlank()) {
-            throw new IllegalArgumentException("USERNAME_REQUIRED");
+            throw new BadRequestException("USERNAME_REQUIRED");
         }
         if (req.getPassword() == null || req.getPassword().isBlank()) {
-            throw new IllegalArgumentException("PASSWORD_REQUIRED");
+            throw new BadRequestException("PASSWORD_REQUIRED");
         }
         if (req.getEmail() == null || req.getEmail().isBlank()) {
-            throw new IllegalArgumentException("EMAIL_REQUIRED");
+            throw new BadRequestException("EMAIL_REQUIRED");
         }
 
         if (userRepository.existsByUsername(req.getUsername())) {
-            throw new IllegalArgumentException("USERNAME_ALREADY_EXISTS");
+            throw new BadRequestException("USERNAME_ALREADY_EXISTS");
         }
         if (userRepository.existsByEmail(req.getEmail())) {
-            throw new IllegalArgumentException("EMAIL_ALREADY_EXISTS");
+            throw new BadRequestException("EMAIL_ALREADY_EXISTS");
         }
 
         User user = new User();
@@ -86,23 +75,14 @@ public class AdminService {
         user.setRole(req.getRole());
         user.setActive(true);
 
-        userRepository.save(user);
-
         User saved = userRepository.save(user);
 
-        return UserResponse.builder()
-                .id(saved.getId())
-                .fullName(saved.getFullName())
-                .username(saved.getUsername())
-                .email(saved.getEmail())
-                .phone(saved.getPhone())
-                .role(saved.getRole())
-                .build();
+        return userMapper.toResponse(saved);
     }
 
     public void deleteUser(UUID id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("USER_NOT_FOUND"));
+                .orElseThrow(() -> new NotFoundException("USER_NOT_FOUND"));
 
         user.setActive(false);
         userRepository.save(user);
@@ -110,7 +90,7 @@ public class AdminService {
 
     public UserResponse updateUser(UUID id, UserRequest req) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("USER_NOT_FOUND"));
+                .orElseThrow(() -> new NotFoundException("USER_NOT_FOUND"));
 
         if (req.getFullName() != null && !req.getFullName().isBlank()) {
             user.setFullName(req.getFullName());
@@ -118,14 +98,14 @@ public class AdminService {
         if (req.getUsername() != null && !req.getUsername().isBlank()) {
             if (userRepository.existsByUsername(req.getUsername()) &&
                     !req.getUsername().equals(user.getUsername())) {
-                throw new RuntimeException("USERNAME_ALREADY_EXISTS");
+                throw new BadRequestException("USERNAME_ALREADY_EXISTS");
             }
             user.setUsername(req.getUsername());
         }
         if (req.getEmail() != null && !req.getEmail().isBlank()) {
             if (userRepository.existsByEmail(req.getEmail()) &&
                     !req.getEmail().equals(user.getEmail())) {
-                throw new RuntimeException("EMAIL_ALREADY_EXISTS");
+                throw new BadRequestException("EMAIL_ALREADY_EXISTS");
             }
             user.setEmail(req.getEmail());
         }
@@ -144,15 +124,7 @@ public class AdminService {
 
         User saved = userRepository.save(user);
 
-        return UserResponse.builder()
-                .id(saved.getId())
-                .fullName(saved.getFullName())
-                .username(saved.getUsername())
-                .email(saved.getEmail())
-                .phone(saved.getPhone())
-                .role(saved.getRole())
-                .active(saved.isActive())
-                .build();
+        return userMapper.toResponse(saved);
     }
 
     public List<FacultyStudentStatsResponse> getFacultyStudentStats() {
@@ -169,9 +141,9 @@ public class AdminService {
     }
 
     public AttendanceStatsResponse getAttendanceStatsBySession(UUID sessionId) {
-        // Kiểm tra session có tồn tại không
         ClassSession session = classSessionRepository.findClassSessionById(sessionId)
-                .orElseThrow(() -> new RuntimeException("SESSION_NOT_FOUND"));
+                .orElseThrow(() -> new NotFoundException("SESSION_NOT_FOUND"));
+        // Print log here to check if session exist or not
 
         Object[] result = attendanceRespository.findAttendanceStatsBySessionId(sessionId);
         
@@ -219,7 +191,7 @@ public class AdminService {
                     .attendanceRate(Math.round(attendanceRate * 100.0) / 100.0) // Làm tròn 2 chữ số
                     .build();
         } catch (Exception e) {
-            throw new RuntimeException("Error processing attendance stats: " + e.getMessage() + " (Array length: " + result.length + ")");
+            throw new BadRequestException("Error processing attendance stats: " + e.getMessage() + " (Array length: " + result.length + ")");
         }
     }
 

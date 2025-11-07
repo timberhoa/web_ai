@@ -25,10 +25,10 @@ public class CourseLecturer {
     UUID id;
 
     @ManyToOne
-    @JoinTable(name = "course_id")
+    @JoinColumn(name = "course_id")
     Course course;
 
     @ManyToOne
-    @JoinTable(name = "lecturer")
-    User user;
+    @JoinColumn(name = "lecturer_id")
+    User lecturer;
 }

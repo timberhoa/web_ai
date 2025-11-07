@@ -9,6 +9,7 @@ import com.example.web_ai.dto.response.UserResponse;
 import com.example.web_ai.entity.Image;
 import com.example.web_ai.entity.User;
 import com.example.web_ai.enums.Role;
+import com.example.web_ai.exception.BadRequestException;
 import com.example.web_ai.exception.NotFoundException;
 import com.example.web_ai.mapper.UserMapper;
 import com.example.web_ai.repository.ImageRepository;
@@ -36,27 +37,9 @@ public class UserService {
 
     public UserResponse getUserById(UUID id) {
         User u = userRepository.findUserById(id)
-                .orElseThrow(() -> new RuntimeException("USER_NOT_FOUND"));
+                .orElseThrow(() -> new NotFoundException("USER_NOT_FOUND"));
 
-        FacultySimpleResponse facultyResponse = null;
-        if (u.getFaculty() != null) {
-            facultyResponse = FacultySimpleResponse.builder()
-                    .id(u.getFaculty().getId())
-                    .code(u.getFaculty().getCode())
-                    .name(u.getFaculty().getName())
-                    .build();
-        }
-
-        return UserResponse.builder()
-                .id(u.getId())
-                .fullName(u.getFullName())
-                .username(u.getUsername())
-                .email(u.getEmail())
-                .phone(u.getPhone())
-                .role(u.getRole())
-                .active(u.isActive())
-                .faculty(facultyResponse)
-                .build();
+        return userMapper.toResponse(u);
     }
 
     public UserResponse getUserByUsername(String username){
@@ -80,7 +63,7 @@ public class UserService {
 
     public UserResponse updateUser(UUID id, UserRequest req) {
         User u = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("USER_NOT_FOUND"));
+                .orElseThrow(() -> new NotFoundException("USER_NOT_FOUND"));
 
         if (req.getFullName() != null) u.setFullName(req.getFullName());
         if (req.getUsername() != null) u.setUsername(req.getUsername());
@@ -89,34 +72,27 @@ public class UserService {
 
         User saved = userRepository.save(u);
 
-        return UserResponse.builder()
-                .id(saved.getId())
-                .fullName(saved.getFullName())
-                .username(saved.getUsername())
-                .email(saved.getEmail())
-                .phone(saved.getPhone())
-                .role(saved.getRole())
-                .build();
+        return userMapper.toResponse(saved);
     }
 
     public void updatePassword(UUID id, ResetPassword req) {
         User u = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("USER_NOT_FOUND"));
+                .orElseThrow(() -> new NotFoundException("USER_NOT_FOUND"));
 
         if (req.getConfirmPassword() != null &&
                 !req.getNewPassword().equals(req.getConfirmPassword())) {
-            throw new RuntimeException("PASSWORD_CONFIRM_NOT_MATCH");
+            throw new BadRequestException("PASSWORD_CONFIRM_NOT_MATCH");
         }
 
         if (!passwordEncoder.matches(req.getOldPassword(), u.getPassword())) {
-            throw new RuntimeException("OLD_PASSWORD_INCORRECT");
+            throw new BadRequestException("OLD_PASSWORD_INCORRECT");
         }
 
         if (req.getNewPassword().length() < 8) {
-            throw new RuntimeException("PASSWORD_TOO_WEAK");
+            throw new BadRequestException("PASSWORD_TOO_WEAK");
         }
         if (passwordEncoder.matches(req.getNewPassword(), u.getPassword())) {
-            throw new RuntimeException("NEW_PASSWORD_MUST_DIFFER_FROM_OLD");
+            throw new BadRequestException("NEW_PASSWORD_MUST_DIFFER_FROM_OLD");
         }
 
         u.setPassword(passwordEncoder.encode(req.getNewPassword()));
@@ -129,17 +105,19 @@ public class UserService {
 
         byte[] imageBytes = file.getBytes();
         String base64Image = Base64.getEncoder().encodeToString(imageBytes);
-        String base65WithPrefix = "data:" + file.getContentType() + ";base64," + base64Image;
+        String base64WithPrefix = "data:" + file.getContentType() + ";base64," + base64Image;
+        
         Image image = Image.builder()
-                        .imageData(base65WithPrefix)
+                        .imageData(base64WithPrefix)
                         .contentType(file.getContentType())
                         .fileName(file.getOriginalFilename())
                         .fileSize(file.getSize())
                         .user(user)
                         .build();
-        user.getImages().add(image);
-
-        userRepository.save(user);
+        
+        // Save image directly instead of adding to user's images collection
+        // This avoids potential issues with bidirectional mapping
+        imageRepository.save(image);
     }
 
     public Image getImage(UUID imageId) {
@@ -158,27 +136,7 @@ public class UserService {
         List<User> students = userRepository.findByRole(Role.STUDENT);
         
         return students.stream()
-                .map(student -> {
-                    FacultySimpleResponse facultyResponse = null;
-                    if (student.getFaculty() != null) {
-                        facultyResponse = FacultySimpleResponse.builder()
-                                .id(student.getFaculty().getId())
-                                .code(student.getFaculty().getCode())
-                                .name(student.getFaculty().getName())
-                                .build();
-                    }
-                    
-                    return UserResponse.builder()
-                            .id(student.getId())
-                            .fullName(student.getFullName())
-                            .username(student.getUsername())
-                            .email(student.getEmail())
-                            .phone(student.getPhone())
-                            .role(student.getRole())
-                            .active(student.isActive())
-                            .faculty(facultyResponse)
-                            .build();
-                })
+                .map(userMapper::toResponse)
                 .collect(Collectors.toList());
     }
 }

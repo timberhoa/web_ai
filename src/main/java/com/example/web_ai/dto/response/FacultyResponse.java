@@ -14,16 +14,15 @@ public class FacultyResponse {
     private UUID id;
     private String code;
     private String name;
-    private UUID teacherId;
-    private String teacherName;
+    // Removed head/teacher fields since Faculty no longer has head
 
     public static FacultyResponse fromEntity(Faculty f) {
+        if (f == null) return null;
+        
         return FacultyResponse.builder()
                 .id(f.getId())
                 .code(f.getCode())
                 .name(f.getName())
-                .teacherId(f.getHead() != null ? f.getHead().getId() : null)
-                .teacherName(f.getHead() != null ? f.getHead().getFullName() : null)
                 .build();
     }
 }

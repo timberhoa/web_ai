@@ -56,6 +56,19 @@ public class User {
 
     // Can add other column like avatarImage, backgroundImage if needed
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Image>  images = new ArrayList<>();
+    private List<Image> images = new ArrayList<>();
+
+    // Bidirectional mappings
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Enrollment> enrollments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Attendance> attendances = new ArrayList<>();
+
+    @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL)
+    private List<Course> taughtCourses = new ArrayList<>();
+
+    @OneToMany(mappedBy = "lecturer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CourseLecturer> courseLecturers = new ArrayList<>();
 
 }
