@@ -62,6 +62,9 @@ public class AdminController {
 
     @GetMapping("/stats/attendance/{sessionId}")
     public ResponseEntity<AttendanceStatsResponse> getAttendanceStatsBySession(@PathVariable UUID sessionId) {
+        if (sessionId == null) {
+            throw new IllegalArgumentException("SESSION_ID_REQUIRED");
+        }
         return ResponseEntity.ok(adminService.getAttendanceStatsBySession(sessionId));
     }
 

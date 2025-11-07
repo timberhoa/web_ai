@@ -11,10 +11,11 @@ import com.example.web_ai.enums.Role;
 import com.example.web_ai.exception.BadRequestException;
 import com.example.web_ai.exception.NotFoundException;
 import com.example.web_ai.mapper.UserMapper;
-import com.example.web_ai.repository.AttendanceRespository;
+import com.example.web_ai.repository.AttendanceRepository;
 import com.example.web_ai.repository.ClassSessionRepository;
 import com.example.web_ai.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,12 +26,13 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminService {
     private final UserRepository userRepository;
-    private final AttendanceRespository attendanceRespository;
+    private final AttendanceRepository attendanceRepository;
     private final ClassSessionRepository classSessionRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
@@ -139,13 +141,20 @@ public class AdminService {
     }
 
     public AttendanceStatsResponse getAttendanceStatsBySession(UUID sessionId) {
+        log.info("🔹 Getting attendance stats for session: {}", sessionId);
+        
         ClassSession session = classSessionRepository.findClassSessionById(sessionId)
                 .orElseThrow(() -> new NotFoundException("SESSION_NOT_FOUND"));
-        // Print log here to check if session exist or not
+                
+        log.info("🔹 Found session: {} - Course: {} ({}), Room: {}", 
+                 sessionId, session.getCourse().getName(), session.getCourse().getCode(), session.getRoomName());
 
-        Object[] result = attendanceRespository.findAttendanceStatsBySessionId(sessionId);
+        Object[] result = attendanceRepository.findAttendanceStatsBySessionId(sessionId);
+        
+        log.info("🔹 Query result array length: {}", result != null ? result.length : 0);
         
         if (result == null || result.length == 0) {
+            log.warn("🔸 No attendance data found for session: {}, returning default stats", sessionId);
             // Nếu không có dữ liệu attendance, tạo response với dữ liệu từ session
             return AttendanceStatsResponse.builder()
                     .sessionId(sessionId)
@@ -175,6 +184,9 @@ public class AdminService {
             // Tính tỉ lệ có mặt (present + late) / total enrolled
             Double attendanceRate = totalEnrolled > 0 ? 
                 ((double) (presentCount + lateCount) / totalEnrolled) * 100 : 0.0;
+
+            log.info("🔹 Attendance stats calculated - Total: {}, Present: {}, Late: {}, Absent: {}, Rate: {}%", 
+                     totalEnrolled, presentCount, lateCount, absentCount, Math.round(attendanceRate * 100.0) / 100.0);
 
             return AttendanceStatsResponse.builder()
                     .sessionId(sessionId)

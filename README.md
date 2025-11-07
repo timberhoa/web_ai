@@ -11,5 +11,5 @@
 `use db_1;`
 `show tables;`
 
-## Drop db if neccessary
+## Drop db if neccessary (anytime that change the database structure)
 `drop database db_1;`
