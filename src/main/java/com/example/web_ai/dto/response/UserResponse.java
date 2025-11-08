@@ -24,4 +24,5 @@ public class UserResponse {
     String phone;
     Role role;
     Boolean active;
+    FacultySimpleResponse faculty;
 }

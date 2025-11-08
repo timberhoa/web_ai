@@ -7,7 +7,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import static lombok.AccessLevel.PRIVATE;
@@ -21,7 +25,8 @@ import static lombok.AccessLevel.PRIVATE;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(nullable = false, length = 36)
     UUID id;
 
     @Column(nullable = false)
@@ -42,7 +47,28 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-
     @Column(nullable = false)
     boolean active = true;
+
+    @ManyToOne
+    @JoinColumn(name = "faculty_id", nullable = true)
+    Faculty faculty;
+
+    // Can add other column like avatarImage, backgroundImage if needed
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Image> images = new ArrayList<>();
+
+    // Bidirectional mappings
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Enrollment> enrollments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Attendance> attendances = new ArrayList<>();
+
+    @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL)
+    private List<Course> taughtCourses = new ArrayList<>();
+
+    @OneToMany(mappedBy = "lecturer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CourseLecturer> courseLecturers = new ArrayList<>();
+
 }
