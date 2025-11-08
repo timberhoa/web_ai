@@ -23,7 +23,7 @@ public class DataInitializer {
             CourseRepository courseRepository,
             ClassSessionRepository classSessionRepository,
             EnrollmentRepository enrollmentRepository,
-            AttendanceRespository attendanceRepository,
+            AttendanceRepository attendanceRepository,
             CourseLecturerRepository courseLecturerRepository
     ) {
         return args -> {

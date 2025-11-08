@@ -7,7 +7,7 @@ import com.example.web_ai.entity.ClassSession;
 import com.example.web_ai.entity.User;
 import com.example.web_ai.exception.NotFoundException;
 import com.example.web_ai.mapper.AttendanceMapper;
-import com.example.web_ai.repository.AttendanceRespository;
+import com.example.web_ai.repository.AttendanceRepository;
 import com.example.web_ai.repository.ClassSessionRepository;
 import com.example.web_ai.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class AttendanceService {
-    private final AttendanceRespository attendanceRespository;
+    private final AttendanceRepository attendanceRespository;
     private final UserRepository userRepository;
     private final ClassSessionRepository classSessionRepository;
     private final AttendanceMapper attendanceMapper;
