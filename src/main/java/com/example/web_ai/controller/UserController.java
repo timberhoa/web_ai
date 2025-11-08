@@ -38,7 +38,7 @@ public class UserController {
         return userService.getUserById(id);
     }
 
-    @PreAuthorize("hasRole('TEACHER')")
+    // @PreAuthorize("hasRole('TEACHER','STUDENT','ADMIN')")
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getMyProfile(Authentication authentication) {
         String username = authentication.getName();
@@ -61,7 +61,7 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> update(@PathVariable UUID id,
-                                               @RequestBody UserRequest req) {
+            @RequestBody UserRequest req) {
         return ResponseEntity.ok(userService.updateUser(id, req));
     }
 
@@ -74,7 +74,7 @@ public class UserController {
 
     @PreAuthorize("hasRole('STUDENT')")
     @GetMapping(value = "grades")
-    public ResponseEntity<GradeResponse> getAllGrade(Authentication authentication){
+    public ResponseEntity<GradeResponse> getAllGrade(Authentication authentication) {
         Jwt jwt = (Jwt) authentication.getPrincipal();
         String userIdString = jwt.getClaim("id");
 
@@ -84,7 +84,7 @@ public class UserController {
     }
 
     @GetMapping(value = "/image/{imageId}")
-    public ResponseEntity<Image> getImage(@PathVariable UUID imageId){
+    public ResponseEntity<Image> getImage(@PathVariable UUID imageId) {
         Image image = userService.getImage(imageId);
         return ResponseEntity.ok(image);
     }
