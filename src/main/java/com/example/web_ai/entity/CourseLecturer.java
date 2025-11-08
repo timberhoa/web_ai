@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.util.UUID;
 
@@ -18,14 +20,15 @@ import java.util.UUID;
 public class CourseLecturer {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(nullable = false, length = 36)
     UUID id;
 
     @ManyToOne
-    @JoinTable(name = "course_id")
+    @JoinColumn(name = "course_id")
     Course course;
 
     @ManyToOne
-    @JoinTable(name = "lecturer")
-    User user;
+    @JoinColumn(name = "lecturer_id")
+    User lecturer;
 }

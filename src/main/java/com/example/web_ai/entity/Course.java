@@ -7,7 +7,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import static lombok.AccessLevel.PRIVATE;
@@ -21,7 +25,8 @@ import static lombok.AccessLevel.PRIVATE;
 public class Course {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(nullable = false, length = 36)
     UUID id;
 
     @Column(nullable = false, unique = true, length = 30)
@@ -39,4 +44,14 @@ public class Course {
     @ManyToOne
     @JoinColumn(name = "faculty_id", nullable = false)
     Faculty faculty;
+
+    // Bidirectional mappings
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Enrollment> enrollments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ClassSession> classSessions = new ArrayList<>();
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CourseLecturer> courseLecturers = new ArrayList<>();
 }

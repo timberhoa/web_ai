@@ -1,6 +1,5 @@
 package com.example.web_ai.dto.response;
 
-import com.example.web_ai.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,17 +11,13 @@ import java.util.UUID;
 import static lombok.AccessLevel.PRIVATE;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @FieldDefaults(level = PRIVATE)
-public class UserResponse {
-    UUID id;
-    String fullName;
-    String username;
-    String email;
-    String phone;
-    Role role;
-    Boolean active;
-    FacultySimpleResponse faculty;
+public class FacultyStudentStatsResponse {
+    UUID facultyId;
+    String facultyCode;
+    String facultyName;
+    Long studentCount;
 }

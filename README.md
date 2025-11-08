@@ -6,6 +6,10 @@
 `docker exec -it mysql_db bash`: go into mysql container bash
 
 `mysql -u root -p password`: enter password for user root
+
 ## Run query
 `use db_1;`
 `show tables;`
+
+## Drop db if neccessary (anytime that change the database structure)
+`drop database db_1;`

@@ -5,6 +5,9 @@ import com.example.web_ai.dto.response.CourseResponse;
 import com.example.web_ai.service.CourseService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,13 +43,29 @@ public class CourseController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CourseResponse>> listCourses() {
-        return ResponseEntity.ok(courseService.listCourses());
+    public ResponseEntity<Page<CourseResponse>> listCourses(
+            @PageableDefault(size = 10, sort = "name") Pageable pageable) {
+        return ResponseEntity.ok(courseService.listCourses(pageable));
     }
 
     @GetMapping("/by-faculty/{faculty_code}")
-    public ResponseEntity<List<CourseResponse>> getCourseByFacultyCode(@PathVariable String faculty_code) {
-        return ResponseEntity.ok(courseService.getListCourseByFaculty(faculty_code));
+    public ResponseEntity<Page<CourseResponse>> getCourseByFacultyCode(
+            @PathVariable String faculty_code,
+            @PageableDefault(size = 10, sort = "name") Pageable pageable) {
+        return ResponseEntity.ok(courseService.getListCourseByFaculty(faculty_code, pageable));
+    }
+
+    @GetMapping("/admin/all")
+    public ResponseEntity<Page<CourseResponse>> getAllCoursesForAdmin(
+            @PageableDefault(size = 15, sort = "name") Pageable pageable) {
+        return ResponseEntity.ok(courseService.getAllCoursesForAdmin(pageable));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<CourseResponse>> searchCoursesByName(
+            @RequestParam("name") String name,
+            @PageableDefault(size = 10, sort = "name") Pageable pageable) {
+        return ResponseEntity.ok(courseService.searchCoursesByName(name, pageable));
     }
 
 }

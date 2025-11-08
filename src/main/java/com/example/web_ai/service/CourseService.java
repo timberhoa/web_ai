@@ -5,10 +5,14 @@ import com.example.web_ai.dto.response.CourseResponse;
 import com.example.web_ai.entity.Course;
 import com.example.web_ai.entity.Faculty;
 import com.example.web_ai.entity.User;
+import com.example.web_ai.exception.BadRequestException;
+import com.example.web_ai.exception.NotFoundException;
 import com.example.web_ai.repository.CourseRepository;
 import com.example.web_ai.repository.FacultyRepository;
 import com.example.web_ai.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
@@ -28,22 +32,22 @@ public class CourseService {
 
     public CourseResponse addCourse(CourseRequest req) {
         if (req.getCode() == null || req.getCode().isBlank())
-            throw new IllegalArgumentException("CODE_REQUIRED");
+            throw new BadRequestException("CODE_REQUIRED");
         if (req.getName() == null || req.getName().isBlank())
-            throw new IllegalArgumentException("NAME_REQUIRED");
+            throw new BadRequestException("NAME_REQUIRED");
         if (courseRepository.existsByCode(req.getCode()))
-            throw new RuntimeException("COURSE_CODE_ALREADY_EXISTS");
+            throw new BadRequestException("COURSE_CODE_ALREADY_EXISTS");
 
         User teacher = null;
         if (req.getTeacher_id() != null) {
             teacher = userRepository.findById(req.getTeacher_id())
-                    .orElseThrow(() -> new RuntimeException("TEACHER_NOT_FOUND"));
+                    .orElseThrow(() -> new NotFoundException("TEACHER_NOT_FOUND"));
         }
 
         Faculty faculty = null;
         if (req.getFaculty_id() != null) {
             faculty = facultyRepository.findById(req.getFaculty_id())
-                    .orElseThrow(() -> new RuntimeException("FACULTY_NOT_FOUND"));
+                    .orElseThrow(() -> new NotFoundException("FACULTY_NOT_FOUND"));
         }
 
         Course course = new Course();
@@ -59,11 +63,11 @@ public class CourseService {
 
     public CourseResponse updateCourse(UUID id, CourseRequest req) {
         Course course = courseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("COURSE_NOT_FOUND"));
+                .orElseThrow(() -> new NotFoundException("COURSE_NOT_FOUND"));
 
         if (req.getCode() != null && !req.getCode().isBlank()) {
             if (!req.getCode().equals(course.getCode()) && courseRepository.existsByCode(req.getCode())) {
-                throw new RuntimeException("COURSE_CODE_ALREADY_EXISTS");
+                throw new BadRequestException("COURSE_CODE_ALREADY_EXISTS");
             }
             course.setCode(req.getCode());
         }
@@ -74,7 +78,7 @@ public class CourseService {
 
         if (req.getTeacher_id() != null) {
             User teacher = userRepository.findById(req.getTeacher_id())
-                    .orElseThrow(() -> new RuntimeException("TEACHER_NOT_FOUND"));
+                    .orElseThrow(() -> new NotFoundException("TEACHER_NOT_FOUND"));
             course.setTeacher(teacher);
         }
 
@@ -84,7 +88,7 @@ public class CourseService {
 
         if (req.getFaculty_id() != null) {
             Faculty faculty = facultyRepository.findById(req.getFaculty_id())
-                    .orElseThrow(() -> new RuntimeException("FACULTY_NOT_FOUND"));
+                    .orElseThrow(() -> new NotFoundException("FACULTY_NOT_FOUND"));
             course.setFaculty(faculty);
         }
 
@@ -94,33 +98,47 @@ public class CourseService {
 
     public void deleteCourse(UUID id) {
         Course course = courseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("COURSE_NOT_FOUND"));
+                .orElseThrow(() -> new NotFoundException("COURSE_NOT_FOUND"));
         courseRepository.delete(course);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','STUDENT')")
     public CourseResponse getCourse(UUID id) {
         Course course = courseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("COURSE_NOT_FOUND"));
+                .orElseThrow(() -> new NotFoundException("COURSE_NOT_FOUND"));
         return CourseResponse.fromEntity(course);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','STUDENT')")
-    public List<CourseResponse> listCourses() {
-        return courseRepository.findAll().stream()
-                .map(CourseResponse::fromEntity)
-                .collect(Collectors.toList());
+    public Page<CourseResponse> listCourses(Pageable pageable) {
+        Page<Course> courses = courseRepository.findAll(pageable);
+        return courses.map(CourseResponse::fromEntity);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','STUDENT')")
-    public List<CourseResponse> getListCourseByFaculty(String facultyCode) {
-        if (facultyCode == null) throw new IllegalArgumentException("FACULTY_ID_REQUIRED");
+    public Page<CourseResponse> getListCourseByFaculty(String facultyCode, Pageable pageable) {
+        if (facultyCode == null) throw new BadRequestException("FACULTY_CODE_REQUIRED");
         if (!facultyRepository.existsByCode(facultyCode)) {
-            throw new RuntimeException("FACULTY_NOT_FOUND");
+            throw new NotFoundException("FACULTY_NOT_FOUND");
         }
-        return courseRepository.findAllByFaculty_code(facultyCode).stream()
-                .map(CourseResponse::fromEntity)
-                .collect(Collectors.toList());
+        Page<Course> courses = courseRepository.findAllByFaculty_code(facultyCode, pageable);
+        return courses.map(CourseResponse::fromEntity);
+    }
+
+    // Method chỉ dành cho ADMIN để lấy tất cả course
+    public Page<CourseResponse> getAllCoursesForAdmin(Pageable pageable) {
+        Page<Course> courses = courseRepository.findAll(pageable);
+        return courses.map(CourseResponse::fromEntity);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','STUDENT','TEACHER')")
+    public Page<CourseResponse> searchCoursesByName(String name, Pageable pageable) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new BadRequestException("SEARCH_NAME_REQUIRED");
+        }
+        
+        Page<Course> courses = courseRepository.findByNameContainingIgnoreCase(name.trim(), pageable);
+        return courses.map(CourseResponse::fromEntity);
     }
 
 }

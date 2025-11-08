@@ -1,7 +1,5 @@
 package com.example.web_ai.dto.request;
 
-import com.example.web_ai.entity.User;
-import jakarta.persistence.*;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 

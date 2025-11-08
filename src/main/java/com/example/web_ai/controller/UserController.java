@@ -10,6 +10,9 @@ import com.example.web_ai.entity.Image;
 import com.example.web_ai.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,6 +22,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -28,6 +32,7 @@ import java.util.UUID;
 public class UserController {
     private final UserService userService;
 
+    @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
     @GetMapping("/getUserById")
     public UserResponse getUserByUsername(@RequestParam UUID id) {
         return userService.getUserById(id);
@@ -53,17 +58,21 @@ public class UserController {
         return ResponseEntity.ok(res);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> update(@PathVariable UUID id,
                                                @RequestBody UserRequest req) {
         return ResponseEntity.ok(userService.updateUser(id, req));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','STUDENT','TEACHER')")
     @PutMapping("/updatePassword/{id}")
-    public void updatePassword(@RequestParam UUID id, @RequestBody ResetPassword req) {
+    public ResponseEntity<String> updatePassword(@PathVariable UUID id, @RequestBody ResetPassword req) {
         userService.updatePassword(id, req);
+        return ResponseEntity.ok("Password updated successfully");
     }
 
+    @PreAuthorize("hasRole('STUDENT')")
     @GetMapping(value = "grades")
     public ResponseEntity<GradeResponse> getAllGrade(Authentication authentication){
         Jwt jwt = (Jwt) authentication.getPrincipal();
@@ -113,5 +122,23 @@ public class UserController {
             return ResponseEntity.badRequest().body(UploadImageResponse.builder()
                     .message("Failed to upload image").id(userId).build());
         }
+    }
+
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
+    @GetMapping("/students")
+    public ResponseEntity<Page<UserResponse>> getAllStudents(
+            @PageableDefault(size = 15, sort = "fullName") Pageable pageable) {
+        Page<UserResponse> students = userService.getAllStudents(pageable);
+        return ResponseEntity.ok(students);
+    }
+
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
+    @GetMapping("/search")
+    public ResponseEntity<Page<UserResponse>> searchUsers(
+            @RequestParam("q") String searchTerm,
+            @RequestParam(value = "role", required = false) String role,
+            @PageableDefault(size = 10, sort = "fullName") Pageable pageable) {
+        Page<UserResponse> users = userService.searchUsers(searchTerm, role, pageable);
+        return ResponseEntity.ok(users);
     }
 }
