@@ -252,7 +252,7 @@ public class DataInitializer {
             teacher2.setRole(Role.TEACHER);
             teacher2.setActive(true);
             teacher2.setFaculty(businessFaculty);
-
+    
             User teacher3 = new User();
             teacher3.setFullName("Dr. Le ENG");
             teacher3.setUsername("teacherENG");

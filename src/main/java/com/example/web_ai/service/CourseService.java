@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
+//@PreAuthorize("hasRole('ADMIN')")
 public class CourseService {
 
     private final CourseRepository courseRepository;
@@ -109,13 +109,13 @@ public class CourseService {
         return CourseResponse.fromEntity(course);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','STUDENT')")
+//    @PreAuthorize("hasAnyRole('ADMIN','STUDENT')")
     public Page<CourseResponse> listCourses(Pageable pageable) {
         Page<Course> courses = courseRepository.findAll(pageable);
         return courses.map(CourseResponse::fromEntity);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','STUDENT')")
+//    @PreAuthorize("hasAnyRole('ADMIN','STUDENT')")
     public Page<CourseResponse> getListCourseByFaculty(String facultyCode, Pageable pageable) {
         if (facultyCode == null) throw new BadRequestException("FACULTY_CODE_REQUIRED");
         if (!facultyRepository.existsByCode(facultyCode)) {

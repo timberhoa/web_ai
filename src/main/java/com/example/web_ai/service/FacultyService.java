@@ -17,7 +17,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
+//@PreAuthorize("hasRole('ADMIN')")
 public class FacultyService {
 
     private final FacultyRepository facultyRepository;
@@ -69,7 +69,6 @@ public class FacultyService {
         return FacultyResponse.fromEntity(f);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','STUDENT','TEACHER')")
     public List<FacultyResponse> listFaculties() {
         return facultyRepository.findAll()
                 .stream()

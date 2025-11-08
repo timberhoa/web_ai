@@ -3,6 +3,7 @@ package com.example.web_ai.controller;
 import com.example.web_ai.dto.request.FacultyRequest;
 import com.example.web_ai.dto.response.FacultyResponse;
 import com.example.web_ai.service.FacultyService;
+import jakarta.annotation.security.PermitAll;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

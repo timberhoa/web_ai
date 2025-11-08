@@ -48,6 +48,7 @@ public class SecurityConfig {
             "/api/course",
             "/api/course/{id}",
             "/api/auth/register",
+            "/api/faculties",
             "/api/debug/**",
             "/v3/api-docs/**",
             "/swagger-ui/**",
