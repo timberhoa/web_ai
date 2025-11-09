@@ -3,22 +3,29 @@ package com.example.web_ai.mapper;
 import com.example.web_ai.dto.request.CheckAttendanceRequest;
 import com.example.web_ai.dto.response.CheckAttendanceResponse;
 import com.example.web_ai.entity.Attendance;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring")
-public interface AttendanceMapper {
-    
-    // Ignore fields that will be set manually in service
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "session", ignore = true)
-    @Mapping(target = "student", ignore = true)
-    @Mapping(target = "checkedAt", ignore = true)
-    Attendance toEntity(CheckAttendanceRequest request);
-    
-    // Map attendance ID to response
-    @Mapping(target = "attendance_id", source = "id")
-    @Mapping(target = "message", ignore = true)
-    @Mapping(target = "studentName", ignore = true)
-    CheckAttendanceResponse toResponse(Attendance attendance);
+@Component
+public class AttendanceMapper {
+
+    public Attendance toEntity(CheckAttendanceRequest request) {
+        if (request == null)
+            return null;
+        Attendance a = new Attendance();
+        // id/session/student/checkedAt are set in service layer
+        a.setStatus(request.getStatus());
+        a.setStudentLat(request.getStudentLat());
+        a.setStudentLng(request.getStudentLng());
+        a.setNote(request.getNote());
+        return a;
+    }
+
+    public CheckAttendanceResponse toResponse(Attendance attendance) {
+        if (attendance == null)
+            return null;
+        CheckAttendanceResponse res = new CheckAttendanceResponse();
+        res.setAttendance_id(attendance.getId());
+        // message and studentName are set in service layer
+        return res;
+    }
 }

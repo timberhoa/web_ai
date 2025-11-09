@@ -39,6 +39,8 @@ public class ClassSession {
     double latitude;
     double longitude;
     double radiusMeters;
+    @Column(nullable = false)
+    boolean locked = false;
 
     // Bidirectional mapping
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)

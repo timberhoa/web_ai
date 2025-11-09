@@ -16,4 +16,6 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
     
     // Search by name with pagination - case insensitive, partial match
     Page<Course> findByNameContainingIgnoreCase(String name, Pageable pageable);
+
+    long countByTeacher_Id(UUID teacherId);
 }

@@ -14,4 +14,5 @@ public class CheckAttendanceRequest {
     UUID session_id;
     Double studentLat;
     Double studentLng;
+    String note;
 }

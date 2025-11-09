@@ -14,7 +14,10 @@ import java.util.UUID;
 import static lombok.AccessLevel.PRIVATE;
 
 @Entity
-@Table(name = "attendances")
+@Table(name = "attendances",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_attendance_session_student",
+                columnNames = {"session_id", "student_id"}))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -44,6 +47,8 @@ public class Attendance {
     LocalDateTime checkedAt;
     Double studentLat;
     Double studentLng;
+    @Column(length = 500)
+    String note;
 
     @Enumerated(EnumType.STRING)
     Status status = Status.PRESENT;

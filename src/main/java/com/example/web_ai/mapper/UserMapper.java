@@ -1,47 +1,53 @@
 package com.example.web_ai.mapper;
 
 import com.example.web_ai.dto.request.UserRequest;
+import com.example.web_ai.dto.response.FacultySimpleResponse;
 import com.example.web_ai.dto.response.UserResponse;
-import com.example.web_ai.entity.User;
 import com.example.web_ai.entity.Faculty;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Named;
+import com.example.web_ai.entity.User;
+import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring")
-public interface UserMapper {
-    
-    // Ignore bidirectional fields when mapping from request to entity
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "images", ignore = true)
-    @Mapping(target = "enrollments", ignore = true)
-    @Mapping(target = "attendances", ignore = true)
-    @Mapping(target = "taughtCourses", ignore = true)
-    @Mapping(target = "courseLecturers", ignore = true)
-    @Mapping(target = "faculty", source = "facultyId", qualifiedByName = "facultyIdToFaculty")
-    User toEntity(UserRequest request);
-    
-    // Map entity to response with simple faculty info
-    @Mapping(target = "faculty", source = "faculty", qualifiedByName = "facultyToSimpleResponse")
-    UserResponse toResponse(User user);
-    
-    @Named("facultyIdToFaculty")
-    default Faculty facultyIdToFaculty(java.util.UUID facultyId) {
-        if (facultyId == null) return null;
-        Faculty faculty = new Faculty();
-        faculty.setId(facultyId);
-        return faculty;
+import java.util.UUID;
+
+@Component
+public class UserMapper {
+
+    public User toEntity(UserRequest request) {
+        if (request == null) return null;
+        User u = new User();
+        u.setFullName(request.getFullName());
+        u.setUsername(request.getUsername());
+        u.setEmail(request.getEmail());
+        u.setPhone(request.getPhone());
+        u.setRole(request.getRole());
+        if (request.getFacultyId() != null) {
+            Faculty f = new Faculty();
+            f.setId(request.getFacultyId());
+            u.setFaculty(f);
+        }
+        // password, active and other relations are set by services
+        return u;
     }
-    
-    @Named("facultyToSimpleResponse")
-    default com.example.web_ai.dto.response.FacultySimpleResponse facultyToSimpleResponse(Faculty faculty) {
-        if (faculty == null) return null;
-        return com.example.web_ai.dto.response.FacultySimpleResponse.builder()
-                .id(faculty.getId())
-                .code(faculty.getCode())
-                .name(faculty.getName())
+
+    public UserResponse toResponse(User user) {
+        if (user == null) return null;
+        FacultySimpleResponse faculty = null;
+        if (user.getFaculty() != null) {
+            faculty = FacultySimpleResponse.builder()
+                    .id(user.getFaculty().getId())
+                    .code(user.getFaculty().getCode())
+                    .name(user.getFaculty().getName())
+                    .build();
+        }
+        return UserResponse.builder()
+                .id(user.getId())
+                .fullName(user.getFullName())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .role(user.getRole())
+                .active(user.isActive())
+                .faculty(faculty)
                 .build();
     }
 }
-
-

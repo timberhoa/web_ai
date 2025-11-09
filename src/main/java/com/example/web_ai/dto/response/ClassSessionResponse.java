@@ -18,9 +18,16 @@ import static lombok.AccessLevel.PRIVATE;
 @FieldDefaults(level = PRIVATE)
 public class ClassSessionResponse {
     UUID sessionId;
+    UUID courseId;
     String courseName;
     String courseCode;
+    UUID teacherId;
+    String teacherName;
     String roomName;
     LocalDateTime startTime;
     LocalDateTime endTime;
+    Double latitude;
+    Double longitude;
+    Double radiusMeters;
+    boolean locked;
 }

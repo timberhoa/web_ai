@@ -8,6 +8,7 @@ import com.example.web_ai.dto.response.UploadImageResponse;
 import com.example.web_ai.dto.response.UserResponse;
 import com.example.web_ai.entity.Image;
 import com.example.web_ai.service.UserService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -29,6 +30,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
+@Tag(name = "User", description = "User profile, search and image APIs")
 public class UserController {
     private final UserService userService;
 

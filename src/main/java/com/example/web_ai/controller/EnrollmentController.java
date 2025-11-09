@@ -2,6 +2,8 @@ package com.example.web_ai.controller;
 
 import com.example.web_ai.dto.response.CourseResponse;
 import com.example.web_ai.service.EnrollmentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -22,11 +24,13 @@ import java.util.UUID;
 @RestController
 @RequestMapping("api/enrollment")
 @RequiredArgsConstructor
+@Tag(name = "Enrollment", description = "Student enrollment queries")
 public class EnrollmentController {
     private final EnrollmentService enrollmentService;
 
     @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/courses")
+    @Operation(summary = "My enrolled courses", description = "Paged list of courses of the authenticated student.")
     public ResponseEntity<Page<CourseResponse>> getAllCoursesByStudent(
             Authentication authentication,
             @PageableDefault(size = 10, sort = "name") Pageable pageable){

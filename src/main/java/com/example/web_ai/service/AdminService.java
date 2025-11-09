@@ -6,13 +6,16 @@ import com.example.web_ai.dto.response.ClassSessionResponse;
 import com.example.web_ai.dto.response.FacultyStudentStatsResponse;
 import com.example.web_ai.dto.response.UserResponse;
 import com.example.web_ai.entity.ClassSession;
+import com.example.web_ai.entity.Faculty;
 import com.example.web_ai.entity.User;
 import com.example.web_ai.enums.Role;
 import com.example.web_ai.exception.BadRequestException;
 import com.example.web_ai.exception.NotFoundException;
+import com.example.web_ai.mapper.ClassSessionMapper;
 import com.example.web_ai.mapper.UserMapper;
 import com.example.web_ai.repository.AttendanceRepository;
 import com.example.web_ai.repository.ClassSessionRepository;
+import com.example.web_ai.repository.FacultyRepository;
 import com.example.web_ai.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,12 +34,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminService {
+    private final FacultyRepository facultyRepository;
     private final UserRepository userRepository;
     private final AttendanceRepository attendanceRepository;
     private final ClassSessionRepository classSessionRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
-
+    private final ClassSessionMapper classSessionMapper;
 
     public Page<UserResponse> getUser(Pageable pageable) {
         Page<User> users = userRepository.findAll(pageable);
@@ -73,6 +77,13 @@ public class AdminService {
         user.setEmail(req.getEmail());
         user.setPhone(req.getPhone());
         user.setRole(req.getRole());
+        if (req.getFacultyId() != null) {
+            Faculty faculty = facultyRepository.findById(req.getFacultyId())
+                    .orElseThrow(() -> new NotFoundException("FACULTY_NOT_FOUND"));
+            user.setFaculty(faculty);
+        } else {
+            user.setFaculty(null); // Nếu facultyId null thì set faculty là null
+        }
         user.setActive(true);
 
         User saved = userRepository.save(user);
@@ -129,7 +140,7 @@ public class AdminService {
 
     public List<FacultyStudentStatsResponse> getFacultyStudentStats() {
         List<Object[]> results = userRepository.findStudentCountByFaculty();
-        
+
         return results.stream()
                 .map(result -> FacultyStudentStatsResponse.builder()
                         .facultyId((UUID) result[0])
@@ -142,17 +153,17 @@ public class AdminService {
 
     public AttendanceStatsResponse getAttendanceStatsBySession(UUID sessionId) {
         log.info("🔹 Getting attendance stats for session: {}", sessionId);
-        
+
         ClassSession session = classSessionRepository.findClassSessionById(sessionId)
                 .orElseThrow(() -> new NotFoundException("SESSION_NOT_FOUND"));
-                
-        log.info("🔹 Found session: {} - Course: {} ({}), Room: {}", 
-                 sessionId, session.getCourse().getName(), session.getCourse().getCode(), session.getRoomName());
+
+        log.info("🔹 Found session: {} - Course: {} ({}), Room: {}",
+                sessionId, session.getCourse().getName(), session.getCourse().getCode(), session.getRoomName());
 
         Object[] result = attendanceRepository.findAttendanceStatsBySessionId(sessionId);
-        
+
         log.info("🔹 Query result array length: {}", result != null ? result.length : 0);
-        
+
         if (result == null || result.length == 0) {
             log.warn("🔸 No attendance data found for session: {}, returning default stats", sessionId);
             // Nếu không có dữ liệu attendance, tạo response với dữ liệu từ session
@@ -182,11 +193,11 @@ public class AdminService {
             Long excusedCount = result[7] != null ? ((Number) result[7]).longValue() : 0L;
 
             // Tính tỉ lệ có mặt (present + late) / total enrolled
-            Double attendanceRate = totalEnrolled > 0 ? 
-                ((double) (presentCount + lateCount) / totalEnrolled) * 100 : 0.0;
+            Double attendanceRate = totalEnrolled > 0 ? ((double) (presentCount + lateCount) / totalEnrolled) * 100
+                    : 0.0;
 
-            log.info("🔹 Attendance stats calculated - Total: {}, Present: {}, Late: {}, Absent: {}, Rate: {}%", 
-                     totalEnrolled, presentCount, lateCount, absentCount, Math.round(attendanceRate * 100.0) / 100.0);
+            log.info("🔹 Attendance stats calculated - Total: {}, Present: {}, Late: {}, Absent: {}, Rate: {}%",
+                    totalEnrolled, presentCount, lateCount, absentCount, Math.round(attendanceRate * 100.0) / 100.0);
 
             return AttendanceStatsResponse.builder()
                     .sessionId(sessionId)
@@ -201,21 +212,14 @@ public class AdminService {
                     .attendanceRate(Math.round(attendanceRate * 100.0) / 100.0) // Làm tròn 2 chữ số
                     .build();
         } catch (Exception e) {
-            throw new BadRequestException("Error processing attendance stats: " + e.getMessage() + " (Array length: " + result.length + ")");
+            throw new BadRequestException(
+                    "Error processing attendance stats: " + e.getMessage() + " (Array length: " + result.length + ")");
         }
     }
 
     public Page<ClassSessionResponse> getAllClassSessions(Pageable pageable) {
         Page<ClassSession> sessions = classSessionRepository.findAll(pageable);
-        
-        return sessions.map(session -> ClassSessionResponse.builder()
-                .sessionId(session.getId())
-                .courseName(session.getCourse().getName())
-                .courseCode(session.getCourse().getCode())
-                .roomName(session.getRoomName())
-                .startTime(session.getStartTime())
-                .endTime(session.getEndTime())
-                .build());
+        return sessions.map(classSessionMapper::toResponse);
     }
 
     public String getFirstSessionId() {
@@ -229,12 +233,9 @@ public class AdminService {
     public List<String> getSessionsWithAttendance() {
         List<ClassSession> sessions = classSessionRepository.findAll();
         return sessions.stream()
-                .map(session -> session.getId().toString() + " - " + 
-                      session.getCourse().getName() + " (" + session.getRoomName() + ")")
+                .map(session -> session.getId().toString() + " - " +
+                        session.getCourse().getName() + " (" + session.getRoomName() + ")")
                 .collect(Collectors.toList());
     }
-
-
-
 
 }

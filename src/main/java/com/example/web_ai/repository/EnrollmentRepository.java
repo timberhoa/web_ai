@@ -30,4 +30,12 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, UUID> {
     
     // Keep the original method for backward compatibility
     List<Enrollment> findByStudent_Id(UUID id);
+
+    long countByCourse_Id(UUID courseId);
+
+    // List enrollments by course with student details (avoid N+1)
+    @Query("SELECT e FROM Enrollment e JOIN FETCH e.student WHERE e.course.id = :courseId")
+    List<Enrollment> findByCourse_IdWithStudent(@Param("courseId") UUID courseId);
+
+    boolean existsByCourse_IdAndStudent_Id(UUID courseId, UUID studentId);
 }
