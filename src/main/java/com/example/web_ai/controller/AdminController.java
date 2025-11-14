@@ -23,22 +23,20 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('ADMIN','TEACHER')")
 @Tag(name = "Admin", description = "Admin management APIs: users, sessions, statistics")
 public class AdminController {
     private final AdminService adminService;
 
     @GetMapping("/users")
-    @Operation(summary = "List users",
-            description = "Paged list of all users. Supports sorting and pagination.")
+    @Operation(summary = "List users", description = "Paged list of all users. Supports sorting and pagination.")
     public ResponseEntity<Page<UserResponse>> getAllUsers(
             @PageableDefault(size = 10, sort = "fullName") Pageable pageable) {
         return ResponseEntity.ok(adminService.getUser(pageable));
     }
 
     @GetMapping("/users/filter")
-    @Operation(summary = "Filter users by role",
-            description = "Return users filtered by role (ADMIN/TEACHER/STUDENT) with pagination.")
+    @Operation(summary = "Filter users by role", description = "Return users filtered by role (ADMIN/TEACHER/STUDENT) with pagination.")
     public ResponseEntity<Page<UserResponse>> filterUsers(
             @RequestParam("role") Role role,
             @PageableDefault(size = 10, sort = "fullName") Pageable pageable) {
@@ -72,8 +70,7 @@ public class AdminController {
     }
 
     @GetMapping("/stats/attendance/{sessionId}")
-    @Operation(summary = "Attendance stats by session",
-            description = "Return counts/percentages for a specific class session.")
+    @Operation(summary = "Attendance stats by session", description = "Return counts/percentages for a specific class session.")
     public ResponseEntity<AttendanceStatsResponse> getAttendanceStatsBySession(@PathVariable UUID sessionId) {
         if (sessionId == null) {
             throw new IllegalArgumentException("SESSION_ID_REQUIRED");
