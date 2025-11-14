@@ -23,7 +23,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN','TEACHER')")
+@PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
 @Tag(name = "Admin", description = "Admin management APIs: users, sessions, statistics")
 public class AdminController {
     private final AdminService adminService;
