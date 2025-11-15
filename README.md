@@ -3,8 +3,58 @@
 ## Overview
 This document describes the API endpoints for the Web AI Learning Management System. The system uses JWT authentication with roles: ADMIN, TEACHER, STUDENT.
 
-- Can using through Swagger though:
+- Can using Swagger instead:
 http://localhost:8080/swagger-ui/index.html
+
+## Default Data
+
+  ### Faculty
+
+| Code  | Name                    |
+| ----- | ----------------------- |
+| IT01  | Information Technology  |
+| BUS01 | Business Administration |
+| ENG01 | Engineering             |
+| MED01 | Medicine                |
+| ART01 | Arts & Literature       |
+
+ ### Default Accounts 
+
+ Password of all seed data is 123456
+
+ #### Students
+| Username | Full Name    | Role    | Email                                 | Faculty |
+| -------- | ------------ | ------- | ------------------------------------- | ------- |
+| studentA | Nguyen Van A | STUDENT | [a@student.com](mailto:a@student.com) | IT01    |
+| studentB | Tran Thi B   | STUDENT | [b@student.com](mailto:b@student.com) | IT01    |
+| ...      | ...          | ...     | ...                                   | ...     |
+
+#### Teachers
+
+| Username   | Full Name         | Role    | Email                                     | Faculty |
+| ---------- | ----------------- | ------- | ----------------------------------------- | ------- |
+| teacherIT  | Dr. Pham IT       | TEACHER | [it@teacher.com](mailto:it@teacher.com)   | IT01    |
+| teacherBUS | Dr. Tran Business | TEACHER | [bus@teacher.com](mailto:bus@teacher.com) | BUS01   |
+| teacherENG | Dr. Le Engineer   | TEACHER | [eng@teacher.com](mailto:eng@teacher.com) | ENG01   |
+| teacherMED | Dr. Hoang Medical | TEACHER | [med@teacher.com](mailto:med@teacher.com) | MED01   |
+| teacherART | Dr. Vu Artist     | TEACHER | [art@teacher.com](mailto:art@teacher.com) | ART01   |
+
+#### Admin
+| Username | Full Name    | Role  | Email                                       |
+| -------- | ------------ | ----- | ------------------------------------------- |
+| admin    | Admin System | ADMIN | [admin@system.com](mailto:admin@system.com) |
+
+#### Course
+
+| Code   | Name                        | Faculty | Lecturer   |
+| ------ | --------------------------- | ------- | ---------- |
+| IT101  | Introduction to Programming | IT01    | teacherIT  |
+| IT201  | Database Systems            | IT01    | teacherIT  |
+| BUS101 | Principles of Management    | BUS01   | teacherBUS |
+| BUS201 | Marketing Basics            | BUS01   | teacherBUS |
+| ENG101 | Engineering Mathematics     | ENG01   | teacherENG |
+| MED101 | Anatomy Basics              | MED01   | teacherMED |
+
 
 ---
 
