@@ -1,11 +1,13 @@
 package com.example.web_ai.service;
 
+import com.example.web_ai.dto.HybridCheckInResponse;
 import com.example.web_ai.dto.request.AttendanceUpdateRequest;
 import com.example.web_ai.dto.request.CheckAttendanceRequest;
 import com.example.web_ai.dto.request.SelfCheckAttendanceRequest;
 import com.example.web_ai.dto.response.*;
 import com.example.web_ai.entity.Attendance;
 import com.example.web_ai.entity.ClassSession;
+import com.example.web_ai.entity.Enrollment;
 import com.example.web_ai.entity.User;
 import com.example.web_ai.exception.BadRequestException;
 import com.example.web_ai.exception.NotFoundException;
@@ -39,6 +41,7 @@ public class AttendanceService {
     private final EnrollmentRepository enrollmentRepository;
     private final AttendanceMapper attendanceMapper;
     private final ClassSessionMapper classSessionMapper;
+    private final FaceRecognitionService faceRecognitionService;
 
     @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
     public CheckAttendanceResponse checkAttendance(CheckAttendanceRequest request) {
@@ -124,7 +127,8 @@ public class AttendanceService {
 
         // Determine status by time
         Attendance.Status status = now.isAfter(session.getStartTime().plusMinutes(10))
-                ? Attendance.Status.LATE : Attendance.Status.PRESENT;
+                ? Attendance.Status.LATE
+                : Attendance.Status.PRESENT;
         attendance.setStatus(status);
         attendance.setStudentLat(request.getStudentLat());
         attendance.setStudentLng(request.getStudentLng());
@@ -138,6 +142,149 @@ public class AttendanceService {
         return response;
     }
 
+    @PreAuthorize("hasRole('STUDENT')")
+    public HybridCheckInResponse checkInHybrid(UUID studentId, org.springframework.web.multipart.MultipartFile image,
+            UUID sessionId, Double lat, Double lng) {
+        ClassSession session = classSessionRepository.findClassSessionById(sessionId)
+                .orElseThrow(() -> new NotFoundException("SESSION_NOT_FOUND"));
+        ensureSessionEditable(session);
+
+        // 1. Validate Enrollment
+        if (!enrollmentRepository.existsByCourse_IdAndStudent_Id(session.getCourse().getId(), studentId)) {
+            throw new BadRequestException("NOT_ENROLLED");
+        }
+
+        // 2. Validate Time
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime early = session.getStartTime().minusMinutes(15);
+        LocalDateTime late = session.getEndTime().plusMinutes(15);
+        if (now.isBefore(early) || now.isAfter(late)) {
+            throw new BadRequestException("SESSION_NOT_ACTIVE");
+        }
+
+        // 3. Validate Location (Mandatory)
+        if (session.getRadiusMeters() > 0) {
+            if (lat == null || lng == null) {
+                throw new BadRequestException("LOCATION_REQUIRED");
+            }
+            double distance = distanceMeters(session.getLatitude(), session.getLongitude(), lat, lng);
+            if (distance > session.getRadiusMeters() + 20) {
+                throw new BadRequestException("OUT_OF_GEOFENCE");
+            }
+        }
+
+        User student = userRepository.findUserById(studentId)
+                .orElseThrow(() -> new NotFoundException("USER_NOT_FOUND"));
+
+        // 4. Face Recognition (with Fallback)
+        boolean faceMatched = false;
+        String checkInType = "LOCATION_ONLY";
+        String message = "Check-in successful (Location only)";
+        Float confidence = 0f;
+
+        try {
+            HybridCheckInResponse faceResult = faceRecognitionService.verifyFace(studentId, image);
+            if (Boolean.TRUE.equals(faceResult.getIsMatch())) {
+                faceMatched = true;
+                checkInType = "FACE_AND_LOCATION";
+                message = "Check-in successful (Face + Location)";
+                confidence = faceResult.getConfidence();
+            } else {
+                log.warn("Face verification failed. Confidence: {} < Threshold", faceResult.getConfidence());
+                throw new com.example.web_ai.exception.FaceVerificationFailedException(
+                        "Face verification failed (Confidence: " + faceResult.getConfidence() + ")");
+            }
+        } catch (com.example.web_ai.exception.FaceRecognitionApiException e) {
+            // API Down -> Fallback to Location Only
+            log.warn("Face API down or error, falling back to location only: {}", e.getMessage());
+            checkInType = "LOCATION_ONLY (Fallback)";
+            message = "Check-in successful (Location fallback - Face API unavailable)";
+        } catch (com.example.web_ai.exception.FaceVerificationFailedException e) {
+            // Face mismatch -> Fail check-in
+            throw e;
+        }
+
+        // 5. Save Attendance
+        Attendance attendance = attendanceRepository
+                .findBySession_IdAndStudent_Id(session.getId(), student.getId())
+                .orElseGet(() -> {
+                    Attendance entity = new Attendance();
+                    entity.setSession(session);
+                    entity.setStudent(student);
+                    return entity;
+                });
+
+        Attendance.Status status = now.isAfter(session.getStartTime().plusMinutes(10))
+                ? Attendance.Status.LATE
+                : Attendance.Status.PRESENT;
+
+        attendance.setStatus(status);
+        attendance.setStudentLat(lat);
+        attendance.setStudentLng(lng);
+        attendance.setNote(checkInType);
+        attendance.setCheckedAt(now);
+
+        Attendance saved = attendanceRepository.save(attendance);
+
+        return HybridCheckInResponse.builder()
+                .success(true)
+                .isMatch(faceMatched)
+                .confidence(confidence)
+                .status(status.name())
+                .message(message)
+                .attendanceId(saved.getId())
+                .checkInType(checkInType)
+                .build();
+    }
+
+    @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
+    public com.example.web_ai.dto.response.TeacherCheckInResponse teacherCheckInFace(UUID sessionId,
+            org.springframework.web.multipart.MultipartFile image) {
+        ClassSession session = classSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new NotFoundException("SESSION_NOT_FOUND"));
+        ensureSessionEditable(session);
+
+        // 1. Get all students in the course
+        List<Enrollment> enrollments = enrollmentRepository.findByCourse_IdWithStudent(session.getCourse().getId());
+        List<User> students = enrollments.stream().map(Enrollment::getStudent).collect(Collectors.toList());
+
+        // 2. Identify student from image
+        org.springframework.data.util.Pair<User, Double> identificationResult = faceRecognitionService
+                .identifyStudent(students, image);
+        User identifiedStudent = identificationResult.getFirst();
+        Double confidence = identificationResult.getSecond();
+
+        // 3. Mark attendance
+        Attendance attendance = attendanceRepository
+                .findBySession_IdAndStudent_Id(session.getId(), identifiedStudent.getId())
+                .orElseGet(() -> {
+                    Attendance entity = new Attendance();
+                    entity.setSession(session);
+                    entity.setStudent(identifiedStudent);
+                    return entity;
+                });
+
+        LocalDateTime now = LocalDateTime.now();
+        Attendance.Status status = now.isAfter(session.getStartTime().plusMinutes(10))
+                ? Attendance.Status.LATE
+                : Attendance.Status.PRESENT;
+
+        attendance.setStatus(status);
+        attendance.setNote("TEACHER_FACE_SCAN");
+        attendance.setCheckedAt(now);
+
+        attendanceRepository.save(attendance);
+
+        return com.example.web_ai.dto.response.TeacherCheckInResponse.builder()
+                .success(true)
+                .studentId(identifiedStudent.getId())
+                .studentName(identifiedStudent.getFullName())
+                .confidence(confidence.floatValue())
+                .status(status.name())
+                .message("Identified and checked in successfully")
+                .build();
+    }
+
     @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
     public SessionAttendanceDetailResponse getSessionAttendance(UUID sessionId) {
         ClassSession session = classSessionRepository.findById(sessionId)
@@ -146,7 +293,7 @@ public class AttendanceService {
         List<Attendance> records = attendanceRepository.findAllBySession_IdOrderByCheckedAtAsc(sessionId);
         List<AttendanceRecordResponse> recordResponses = records.stream()
                 .map(this::toRecordResponse)
-                .toList();
+                .collect(Collectors.toList());
 
         AttendanceStatsResponse stats = buildStats(session, records);
 
@@ -215,7 +362,7 @@ public class AttendanceService {
                     String n2 = r2.getStudentName() != null ? r2.getStudentName() : "";
                     return n1.compareToIgnoreCase(n2);
                 })
-                .toList();
+                .collect(Collectors.toList());
 
         return roster;
     }
@@ -232,10 +379,10 @@ public class AttendanceService {
                 .collect(Collectors.toMap(a -> a.getStudent().getId(), a -> a, (a1, a2) -> a1));
 
         // Enrollments of this course
-        var enrollments = enrollmentRepository.findByCourse_IdWithStudent(session.getCourse().getId());
+        List<Enrollment> enrollments = enrollmentRepository.findByCourse_IdWithStudent(session.getCourse().getId());
 
         int created = 0;
-        for (var e : enrollments) {
+        for (Enrollment e : enrollments) {
             UUID studentId = e.getStudent().getId();
             if (byStudent.containsKey(studentId)) {
                 continue;
@@ -260,9 +407,9 @@ public class AttendanceService {
 
     @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
     public List<SessionAttendanceSummaryResponse> monitorSessions(UUID courseId,
-                                                                  UUID teacherId,
-                                                                  Integer minutesBefore,
-                                                                  Integer minutesAfter) {
+            UUID teacherId,
+            Integer minutesBefore,
+            Integer minutesAfter) {
         int before = minutesBefore != null && minutesBefore > 0 ? minutesBefore : 15;
         int after = minutesAfter != null && minutesAfter > 0 ? minutesAfter : 30;
 
@@ -270,17 +417,17 @@ public class AttendanceService {
         LocalDateTime windowStart = now.minusMinutes(before);
         LocalDateTime windowEnd = now.plusMinutes(after);
 
-        List<SessionAttendanceSummaryProjection> projections =
-                attendanceRepository.findLiveSessions(windowStart, windowEnd, courseId, teacherId);
+        List<SessionAttendanceSummaryProjection> projections = attendanceRepository.findLiveSessions(windowStart,
+                windowEnd, courseId, teacherId);
 
-        return projections.stream().map(this::toSummaryResponse).toList();
+        return projections.stream().map(this::toSummaryResponse).collect(Collectors.toList());
     }
 
     @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
     public List<SessionAttendanceSummaryResponse> reviewSessions(LocalDate from,
-                                                                 LocalDate to,
-                                                                 UUID courseId,
-                                                                 UUID teacherId) {
+            LocalDate to,
+            UUID courseId,
+            UUID teacherId) {
         LocalDate startDate = from != null ? from : LocalDate.now();
         LocalDate endDate = to != null ? to : startDate;
 
@@ -291,10 +438,10 @@ public class AttendanceService {
         LocalDateTime fromDateTime = startDate.atStartOfDay();
         LocalDateTime toDateTime = endDate.plusDays(1).atStartOfDay().minusSeconds(1);
 
-        List<SessionAttendanceSummaryProjection> projections =
-                attendanceRepository.findSessionsWithinRange(fromDateTime, toDateTime, courseId, teacherId);
+        List<SessionAttendanceSummaryProjection> projections = attendanceRepository
+                .findSessionsWithinRange(fromDateTime, toDateTime, courseId, teacherId);
 
-        return projections.stream().map(this::toSummaryResponse).toList();
+        return projections.stream().map(this::toSummaryResponse).collect(Collectors.toList());
     }
 
     @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
@@ -377,7 +524,7 @@ public class AttendanceService {
         double dLon = Math.toRadians(lon2 - lon1);
         double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
                 + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                        * Math.sin(dLon / 2) * Math.sin(dLon / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return R * c;
     }

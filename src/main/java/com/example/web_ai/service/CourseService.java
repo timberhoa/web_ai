@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-//@PreAuthorize("hasRole('ADMIN')")
+// @PreAuthorize("hasRole('ADMIN')")
 public class CourseService {
 
     private final CourseRepository courseRepository;
@@ -31,9 +31,9 @@ public class CourseService {
     private final FacultyRepository facultyRepository;
 
     public CourseResponse addCourse(CourseRequest req) {
-        if (req.getCode() == null || req.getCode().isBlank())
+        if (req.getCode() == null || req.getCode().trim().isEmpty())
             throw new BadRequestException("CODE_REQUIRED");
-        if (req.getName() == null || req.getName().isBlank())
+        if (req.getName() == null || req.getName().trim().isEmpty())
             throw new BadRequestException("NAME_REQUIRED");
         if (courseRepository.existsByCode(req.getCode()))
             throw new BadRequestException("COURSE_CODE_ALREADY_EXISTS");
@@ -65,14 +65,14 @@ public class CourseService {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("COURSE_NOT_FOUND"));
 
-        if (req.getCode() != null && !req.getCode().isBlank()) {
+        if (req.getCode() != null && !req.getCode().trim().isEmpty()) {
             if (!req.getCode().equals(course.getCode()) && courseRepository.existsByCode(req.getCode())) {
                 throw new BadRequestException("COURSE_CODE_ALREADY_EXISTS");
             }
             course.setCode(req.getCode());
         }
 
-        if (req.getName() != null && !req.getName().isBlank()) {
+        if (req.getName() != null && !req.getName().trim().isEmpty()) {
             course.setName(req.getName());
         }
 
@@ -109,15 +109,16 @@ public class CourseService {
         return CourseResponse.fromEntity(course);
     }
 
-//    @PreAuthorize("hasAnyRole('ADMIN','STUDENT')")
+    // @PreAuthorize("hasAnyRole('ADMIN','STUDENT')")
     public Page<CourseResponse> listCourses(Pageable pageable) {
         Page<Course> courses = courseRepository.findAll(pageable);
         return courses.map(CourseResponse::fromEntity);
     }
 
-//    @PreAuthorize("hasAnyRole('ADMIN','STUDENT')")
+    // @PreAuthorize("hasAnyRole('ADMIN','STUDENT')")
     public Page<CourseResponse> getListCourseByFaculty(String facultyCode, Pageable pageable) {
-        if (facultyCode == null) throw new BadRequestException("FACULTY_CODE_REQUIRED");
+        if (facultyCode == null)
+            throw new BadRequestException("FACULTY_CODE_REQUIRED");
         if (!facultyRepository.existsByCode(facultyCode)) {
             throw new NotFoundException("FACULTY_NOT_FOUND");
         }
@@ -136,7 +137,7 @@ public class CourseService {
         if (name == null || name.trim().isEmpty()) {
             throw new BadRequestException("SEARCH_NAME_REQUIRED");
         }
-        
+
         Page<Course> courses = courseRepository.findByNameContainingIgnoreCase(name.trim(), pageable);
         return courses.map(CourseResponse::fromEntity);
     }

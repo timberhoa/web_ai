@@ -14,18 +14,19 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-//@PreAuthorize("hasRole('ADMIN')")
+// @PreAuthorize("hasRole('ADMIN')")
 public class FacultyService {
 
     private final FacultyRepository facultyRepository;
 
     public FacultyResponse addFaculty(FacultyRequest req) {
-        if (req.getCode() == null || req.getCode().isBlank())
+        if (req.getCode() == null || req.getCode().trim().isEmpty())
             throw new BadRequestException("CODE_REQUIRED");
-        if (req.getName() == null || req.getName().isBlank())
+        if (req.getName() == null || req.getName().trim().isEmpty())
             throw new BadRequestException("NAME_REQUIRED");
         if (facultyRepository.existsByCode(req.getCode()))
             throw new BadRequestException("FACULTY_CODE_ALREADY_EXISTS");
@@ -43,12 +44,12 @@ public class FacultyService {
         Faculty f = facultyRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("FACULTY_NOT_FOUND"));
 
-        if (req.getCode() != null && !req.getCode().isBlank()) {
+        if (req.getCode() != null && !req.getCode().trim().isEmpty()) {
             if (facultyRepository.existsByCodeAndIdNot(req.getCode(), id))
                 throw new BadRequestException("FACULTY_CODE_ALREADY_EXISTS");
             f.setCode(req.getCode());
         }
-        if (req.getName() != null && !req.getName().isBlank()) {
+        if (req.getName() != null && !req.getName().trim().isEmpty()) {
             f.setName(req.getName());
         }
 
@@ -73,6 +74,6 @@ public class FacultyService {
         return facultyRepository.findAll()
                 .stream()
                 .map(FacultyResponse::fromEntity)
-                .toList();
+                .collect(Collectors.toList());
     }
 }

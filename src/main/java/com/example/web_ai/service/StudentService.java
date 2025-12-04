@@ -7,6 +7,7 @@ import com.example.web_ai.dto.response.StudentAttendanceStatsResponse;
 import com.example.web_ai.entity.Attendance;
 import com.example.web_ai.entity.ClassSession;
 import com.example.web_ai.entity.Course;
+import com.example.web_ai.entity.Enrollment;
 import com.example.web_ai.repository.AttendanceRepository;
 import com.example.web_ai.repository.ClassSessionRepository;
 import com.example.web_ai.repository.EnrollmentRepository;
@@ -38,13 +39,13 @@ public class StudentService {
     private final ClassSessionMapper classSessionMapper;
 
     public Page<ClassSessionResponse> getMySessions(UUID studentId,
-                                                    LocalDateTime from,
-                                                    LocalDateTime to,
-                                                    Pageable pageable) {
+            LocalDateTime from,
+            LocalDateTime to,
+            Pageable pageable) {
         List<UUID> courseIds = enrollmentRepository.findByStudent_Id(studentId).stream()
                 .map(enrollment -> enrollment.getCourse().getId())
                 .distinct()
-                .toList();
+                .collect(Collectors.toList());
 
         if (courseIds.isEmpty()) {
             return Page.empty(pageable);
@@ -63,20 +64,20 @@ public class StudentService {
     }
 
     public List<CourseResponse> getMyCourses(UUID studentId) {
-        var enrollments = enrollmentRepository.findByStudent_IdWithCourseDetails(studentId);
+        List<Enrollment> enrollments = enrollmentRepository.findByStudent_IdWithCourseDetails(studentId);
         Map<UUID, CourseResponse> distinctCourses = new LinkedHashMap<>();
         enrollments.forEach(enrollment -> {
             CourseResponse response = CourseResponse.fromEntity(enrollment.getCourse());
             distinctCourses.put(response.getId(), response);
         });
-        return distinctCourses.values().stream().toList();
+        return distinctCourses.values().stream().collect(Collectors.toList());
     }
 
     public Page<StudentAttendanceHistoryResponse> getMyAttendanceHistory(UUID studentId,
-                                                                         UUID courseId,
-                                                                         LocalDateTime from,
-                                                                         LocalDateTime to,
-                                                                         Pageable pageable) {
+            UUID courseId,
+            LocalDateTime from,
+            LocalDateTime to,
+            Pageable pageable) {
         Pageable sanitized = sanitizeHistoryPageable(pageable);
         Page<Attendance> attendancePage = attendanceRepository
                 .findStudentAttendanceHistory(studentId, courseId, from, to, sanitized);
@@ -84,9 +85,9 @@ public class StudentService {
     }
 
     public List<StudentAttendanceStatsResponse> getMyAttendanceStats(UUID studentId,
-                                                                     UUID courseId,
-                                                                     LocalDateTime from,
-                                                                     LocalDateTime to) {
+            UUID courseId,
+            LocalDateTime from,
+            LocalDateTime to) {
         List<Attendance> records = attendanceRepository
                 .findStudentAttendanceHistory(studentId, courseId, from, to);
         if (records.isEmpty()) {
@@ -99,7 +100,7 @@ public class StudentService {
         return grouped.values().stream()
                 .map(this::toStatsResponse)
                 .sorted((a, b) -> a.getCourseName().compareToIgnoreCase(b.getCourseName()))
-                .toList();
+                .collect(Collectors.toList());
     }
 
     StudentAttendanceHistoryResponse toHistoryResponse(Attendance attendance) {
@@ -129,7 +130,8 @@ public class StudentService {
         long excused = records.stream().filter(a -> a.getStatus() == Attendance.Status.EXCUSED).count();
         long absent = records.stream().filter(a -> a.getStatus() == Attendance.Status.ABSENT).count();
         long attended = present + late + excused;
-        double attendanceRate = totalSessions > 0 ? Math.round(((double) attended / totalSessions) * 10000.0) / 100.0 : 0.0;
+        double attendanceRate = totalSessions > 0 ? Math.round(((double) attended / totalSessions) * 10000.0) / 100.0
+                : 0.0;
 
         return StudentAttendanceStatsResponse.builder()
                 .courseId(course.getId())
@@ -146,9 +148,9 @@ public class StudentService {
     }
 
     public List<ClassSessionResponse> getSessionsForRange(UUID studentId,
-                                                          LocalDateTime from,
-                                                          LocalDateTime to,
-                                                          int limit) {
+            LocalDateTime from,
+            LocalDateTime to,
+            int limit) {
         Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Order.asc("startTime")));
         return getMySessions(studentId, from, to, pageable).getContent();
     }

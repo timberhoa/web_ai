@@ -54,6 +54,19 @@ public class User {
     @JoinColumn(name = "faculty_id", nullable = true)
     Faculty faculty;
 
+    // Face Recognition Fields
+    @Column(name = "face_vector", columnDefinition = "JSON")
+    private String faceVector;
+
+    @Column(name = "face_registered")
+    private Boolean faceRegistered = false;
+
+    @Column(name = "face_quality_score")
+    private Float faceQualityScore;
+
+    @Column(name = "face_registered_at")
+    private java.time.LocalDateTime faceRegisteredAt;
+
     // Can add other column like avatarImage, backgroundImage if needed
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Image> images = new ArrayList<>();

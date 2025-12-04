@@ -2,15 +2,18 @@ package com.example.web_ai.mapper;
 
 import com.example.web_ai.dto.response.ClassSessionResponse;
 import com.example.web_ai.entity.ClassSession;
+import com.example.web_ai.entity.Course;
+import com.example.web_ai.entity.User;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ClassSessionMapper {
 
     public ClassSessionResponse toResponse(ClassSession session) {
-        if (session == null) return null;
-        var course = session.getCourse();
-        var teacher = course != null ? course.getTeacher() : null;
+        if (session == null)
+            return null;
+        Course course = session.getCourse();
+        User teacher = course != null ? course.getTeacher() : null;
 
         return ClassSessionResponse.builder()
                 .sessionId(session.getId())

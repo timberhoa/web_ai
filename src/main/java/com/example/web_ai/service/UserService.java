@@ -44,20 +44,24 @@ public class UserService {
         return userMapper.toResponse(u);
     }
 
-    public UserResponse getUserByUsername(String username){
+    public UserResponse getUserByUsername(String username) {
         User user = userRepository.findUserByUsername(username)
                 .orElseThrow(() -> new NotFoundException("User Not Found"));
 
         return userMapper.toResponse(user);
     }
 
-    public UserResponse updateProfileMe(String username, UpdateProfileMeRequest req){
+    public UserResponse updateProfileMe(String username, UpdateProfileMeRequest req) {
         User user = userRepository.findUserByUsername(username)
                 .orElseThrow(() -> new NotFoundException("User Not Found"));
-        if (req.getFullName() != null) user.setFullName(req.getFullName());
-        if (req.getUsername() != null) user.setUsername(req.getUsername());
-        if (req.getEmail() != null) user.setEmail(req.getEmail());
-        if (req.getPhone() != null) user.setPhone(req.getPhone());
+        if (req.getFullName() != null)
+            user.setFullName(req.getFullName());
+        if (req.getUsername() != null)
+            user.setUsername(req.getUsername());
+        if (req.getEmail() != null)
+            user.setEmail(req.getEmail());
+        if (req.getPhone() != null)
+            user.setPhone(req.getPhone());
 
         userRepository.save(user);
         return userMapper.toResponse(user);
@@ -67,10 +71,14 @@ public class UserService {
         User u = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("USER_NOT_FOUND"));
 
-        if (req.getFullName() != null) u.setFullName(req.getFullName());
-        if (req.getUsername() != null) u.setUsername(req.getUsername());
-        if (req.getEmail() != null) u.setEmail(req.getEmail());
-        if (req.getPhone() != null) u.setPhone(req.getPhone());
+        if (req.getFullName() != null)
+            u.setFullName(req.getFullName());
+        if (req.getUsername() != null)
+            u.setUsername(req.getUsername());
+        if (req.getEmail() != null)
+            u.setEmail(req.getEmail());
+        if (req.getPhone() != null)
+            u.setPhone(req.getPhone());
 
         User saved = userRepository.save(u);
 
@@ -101,22 +109,22 @@ public class UserService {
         userRepository.save(u);
     }
 
-    public void uploadImage(UUID userId, MultipartFile file) throws IOException{
+    public void uploadImage(UUID userId, MultipartFile file) throws IOException {
         User user = userRepository.findUserById(userId)
                 .orElseThrow(() -> new NotFoundException("User Not Found"));
 
         byte[] imageBytes = file.getBytes();
         String base64Image = Base64.getEncoder().encodeToString(imageBytes);
         String base64WithPrefix = "data:" + file.getContentType() + ";base64," + base64Image;
-        
+
         Image image = Image.builder()
-                        .imageData(base64WithPrefix)
-                        .contentType(file.getContentType())
-                        .fileName(file.getOriginalFilename())
-                        .fileSize(file.getSize())
-                        .user(user)
-                        .build();
-        
+                .imageData(base64WithPrefix)
+                .contentType(file.getContentType())
+                .fileName(file.getOriginalFilename())
+                .fileSize(file.getSize())
+                .user(user)
+                .build();
+
         // Save image directly instead of adding to user's images collection
         // This avoids potential issues with bidirectional mapping
         imageRepository.save(image);
@@ -129,14 +137,14 @@ public class UserService {
         return image;
     }
 
-    public GradeResponse getALlGrade(UUID userId){
+    public GradeResponse getALlGrade(UUID userId) {
         // necessary logic to get all grade here
         return GradeResponse.builder().message("Retrieve successfully").build();
     }
 
     public Page<UserResponse> getAllStudents(Pageable pageable) {
         Page<User> students = userRepository.findByRole(Role.STUDENT, pageable);
-        
+
         return students.map(userMapper::toResponse);
     }
 

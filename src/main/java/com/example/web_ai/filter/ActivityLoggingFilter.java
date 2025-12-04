@@ -30,9 +30,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ActivityLoggingFilter extends OncePerRequestFilter {
 
-    private static final List<String> IGNORED_PATH_PREFIXES = List.of(
-            "/swagger", "/v3/api-docs", "/error", "/actuator", "/favicon", "/h2-console"
-    );
+    private static final List<String> IGNORED_PATH_PREFIXES = java.util.Arrays.asList(
+            "/swagger", "/v3/api-docs", "/error", "/actuator", "/favicon", "/h2-console");
 
     private final ActivityLogService activityLogService;
 
@@ -47,8 +46,8 @@ public class ActivityLoggingFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
         long startedAt = System.currentTimeMillis();
         int status = HttpStatus.OK.value();
         String message = "OK";
@@ -68,9 +67,9 @@ public class ActivityLoggingFilter extends OncePerRequestFilter {
     }
 
     private ActivityLog buildLogEntry(HttpServletRequest request,
-                                      int status,
-                                      String message,
-                                      long durationMs) {
+            int status,
+            String message,
+            long durationMs) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UUID userId = null;
         Role role = null;

@@ -53,13 +53,13 @@ public class AdminService {
     }
 
     public UserResponse addUser(UserRequest req) {
-        if (req.getUsername() == null || req.getUsername().isBlank()) {
+        if (req.getUsername() == null || req.getUsername().trim().isEmpty()) {
             throw new BadRequestException("USERNAME_REQUIRED");
         }
-        if (req.getPassword() == null || req.getPassword().isBlank()) {
+        if (req.getPassword() == null || req.getPassword().trim().isEmpty()) {
             throw new BadRequestException("PASSWORD_REQUIRED");
         }
-        if (req.getEmail() == null || req.getEmail().isBlank()) {
+        if (req.getEmail() == null || req.getEmail().trim().isEmpty()) {
             throw new BadRequestException("EMAIL_REQUIRED");
         }
 
@@ -103,17 +103,17 @@ public class AdminService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("USER_NOT_FOUND"));
 
-        if (req.getFullName() != null && !req.getFullName().isBlank()) {
+        if (req.getFullName() != null && !req.getFullName().trim().isEmpty()) {
             user.setFullName(req.getFullName());
         }
-        if (req.getUsername() != null && !req.getUsername().isBlank()) {
+        if (req.getUsername() != null && !req.getUsername().trim().isEmpty()) {
             if (userRepository.existsByUsername(req.getUsername()) &&
                     !req.getUsername().equals(user.getUsername())) {
                 throw new BadRequestException("USERNAME_ALREADY_EXISTS");
             }
             user.setUsername(req.getUsername());
         }
-        if (req.getEmail() != null && !req.getEmail().isBlank()) {
+        if (req.getEmail() != null && !req.getEmail().trim().isEmpty()) {
             if (userRepository.existsByEmail(req.getEmail()) &&
                     !req.getEmail().equals(user.getEmail())) {
                 throw new BadRequestException("EMAIL_ALREADY_EXISTS");
@@ -126,7 +126,7 @@ public class AdminService {
         if (req.getRole() != null) {
             user.setRole(req.getRole());
         }
-        if (req.getPassword() != null && !req.getPassword().isBlank()) {
+        if (req.getPassword() != null && !req.getPassword().trim().isEmpty()) {
             user.setPassword(passwordEncoder.encode(req.getPassword()));
         }
         if (req.getActive() != null) {

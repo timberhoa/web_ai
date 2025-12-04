@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Face Recognition Tester</title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        .section {
+            background: white;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #667eea;
+            margin-top: 0;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            cursor: pointer;
+            margin: 10px 5px;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #28a745;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #dc3545;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 80px;
+            font-family: monospace;
+            font-size: 11px;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+        }
+
+        input[type="file"] {
+            margin: 10px 0;
+            padding: 10px;
+            border: 2px dashed #667eea;
+            border-radius: 5px;
+            background: #f8f9fa;
+            width: 100%;
+        }
+
+        .preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .preview img {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+        }
+
+        .api-url {
+            background: #f8f9fa;
+            padding: 12px;
+            border-left: 4px solid #667eea;
+            margin: 10px 0;
+            font-family: monospace;
+            word-break: break-all;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .badge.match {
+            background: #28a745;
+            color: white;
+        }
+
+        .badge.no-match {
+            background: #dc3545;
+            color: white;
+        }
+
+        .new-tag {
+            background: #ff6b6b;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🎯 Face Recognition API Tester</h1>
+    <div class="api-url"><strong>API URL:</strong> https://untimed-kasen-invigoratingly.ngrok-free.dev</div>
+
+    <!-- Section 1: Single Image -->
+    <div class="section">
+        <h2>📸 Test 1: Trích xuất Vector (1 ảnh)</h2>
+        <input type="file" id="img1" accept="image/*">
+        <button onclick="extractVector()">Trích xuất Vector</button>
+        <div id="result1"></div>
+    </div>
+
+    <!-- Section 2: Multi-Image Training -->
+    <div class="section">
+        <h2>🎓 Test 2: Train với Nhiều Ảnh <span class="new-tag">NEW</span></h2>
+        <p style="color: #666; font-size: 14px;">Upload 3-5 ảnh khác nhau của cùng 1 người để tăng độ chính xác</p>
+        <input type="file" id="imgMulti" accept="image/*" multiple>
+        <div class="preview" id="previewMulti"></div>
+        <button onclick="trainMultiple()">🚀 Train với Nhiều Ảnh</button>
+        <div id="result2"></div>
+    </div>
+
+    <!-- Section 3: Verify -->
+    <div class="section">
+        <h2>✅ Test 3: Verify Khuôn Mặt</h2>
+        <p style="color: #666; font-size: 14px;"><strong>Target Vector:</strong> (tự động điền từ Test 1 hoặc Test 2)
+        </p>
+        <textarea id="targetVector" placeholder="Vector sẽ tự động điền vào đây..."></textarea>
+        <input type="file" id="img3" accept="image/*">
+        <button onclick="verifyFace()">🔍 Verify</button>
+        <div id="result3"></div>
+    </div>
+
+    <script>
+        const API = 'https://untimed-kasen-invigoratingly.ngrok-free.dev';
+
+        // Test 1: Extract single vector
+        async function extractVector() {
+            const file = document.getElementById('img1').files[0];
+            if (!file) { alert('Chọn ảnh!'); return; }
+
+            const form = new FormData();
+            form.append('file', file);
+
+            document.getElementById('result1').innerHTML = '<div class="result">Đang xử lý...</div>';
+
+            try {
+                const res = await fetch(API + '/extract-vector', { method: 'POST', body: form });
+                const data = await res.json();
+
+                if (data.success) {
+                    const vector = JSON.stringify(data.vector).replace(/\s+/g, '');
+                    document.getElementById('targetVector').value = vector;
+
+                    document.getElementById('result1').innerHTML = `
+                        <div class="result success">
+                            ✅ <strong>Thành công!</strong><br><br>
+                            Vector: ${data.vector_dimension} chiều<br>
+                            Gender: ${data.gender}, Age: ${data.age}<br>
+                            Quality: ${data.quality_score.toFixed(2)}<br><br>
+                            <strong>✓ Vector đã auto-paste vào Test 3!</strong>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('result1').innerHTML = `<div class="result error">❌ ${data.message || 'Lỗi'}</div>`;
+                }
+            } catch (e) {
+                document.getElementById('result1').innerHTML = `<div class="result error">❌ Lỗi: ${e.message}</div>`;
+            }
+        }
+
+        // Preview multiple images
+        document.getElementById('imgMulti').addEventListener('change', function () {
+            const preview = document.getElementById('previewMulti');
+            preview.innerHTML = '';
+
+            const files = this.files;
+            if (files.length < 3) {
+                preview.innerHTML = '<p style="color:#dc3545">⚠️ Cần ít nhất 3 ảnh!</p>';
+                return;
+            }
+            if (files.length > 10) {
+                preview.innerHTML = '<p style="color:#dc3545">⚠️ Tối đa 10 ảnh!</p>';
+                return;
+            }
+
+            for (let file of files) {
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                preview.appendChild(img);
+            }
+
+            preview.innerHTML += `<p style="color:#28a745; width:100%; margin:10px 0;">✓ ${files.length} ảnh đã chọn</p>`;
+        });
+
+        // Test 2: Train with multiple images
+        async function trainMultiple() {
+            const files = document.getElementById('imgMulti').files;
+
+            if (files.length < 3) {
+                alert('Cần ít nhất 3 ảnh!');
+                return;
+            }
+
+            if (files.length > 10) {
+                alert('Tối đa 10 ảnh!');
+                return;
+            }
+
+            const form = new FormData();
+            for (let file of files) {
+                form.append('files', file);
+            }
+
+            document.getElementById('result2').innerHTML = '<div class="result">⏳ Đang xử lý ' + files.length + ' ảnh...</div>';
+
+            try {
+                const res = await fetch(API + '/extract-vectors-batch', { method: 'POST', body: form });
+                const data = await res.json();
+
+                if (data.success) {
+                    const vector = JSON.stringify(data.average_vector).replace(/\s+/g, '');
+                    document.getElementById('targetVector').value = vector;
+
+                    document.getElementById('result2').innerHTML = `
+                        <div class="result success">
+                            ✅ <strong>Train thành công!</strong><br><br>
+                            📊 Đã xử lý: <strong>${data.images_processed}</strong> ảnh<br>
+                            📐 Vector dimension: ${data.vector_dimension} chiều<br>
+                            💾 Average vector đã tạo<br><br>
+                            <strong>✓ Average vector đã auto-paste vào Test 3!</strong><br>
+                            <em style="color:#666; font-size:11px;">Độ chính xác tăng ~5-7% so với 1 ảnh</em>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('result2').innerHTML = `<div class="result error">❌ ${data.message || 'Lỗi'}</div>`;
+                }
+            } catch (e) {
+                document.getElementById('result2').innerHTML = `<div class="result error">❌ Lỗi: ${e.message}</div>`;
+            }
+        }
+
+        // Test 3: Verify
+        async function verifyFace() {
+            const file = document.getElementById('img3').files[0];
+            const vector = document.getElementById('targetVector').value.trim();
+
+            if (!file) { alert('Chọn ảnh!'); return; }
+            if (!vector) { alert('Thiếu vector! Hãy chạy Test 1 hoặc Test 2 trước.'); return; }
+
+            const form = new FormData();
+            form.append('file', file);
+            form.append('target_vector', vector);
+
+            document.getElementById('result3').innerHTML = '<div class="result">Đang verify...</div>';
+
+            try {
+                const res = await fetch(API + '/verify', { method: 'POST', body: form });
+                const data = await res.json();
+
+                if (data.success) {
+                    const match = data.is_match ?
+                        '<span class="badge match">✅ KHỚP - CÙNG NGƯỜI</span>' :
+                        '<span class="badge no-match">❌ KHÔNG KHỚP</span>';
+
+                    document.getElementById('result3').innerHTML = `
+                        <div class="result ${data.is_match ? 'success' : 'error'}">
+                            ${match}<br><br>
+                            <strong>Confidence:</strong> ${(data.confidence * 100).toFixed(2)}%<br>
+                            <strong>Similarity:</strong> ${data.similarity.toFixed(4)} (threshold: ${data.thresholds.similarity_threshold})<br>
+                            <strong>Distance:</strong> ${data.distance.toFixed(4)}<br>
+                            <strong>Quality:</strong> ${data.face_quality.toFixed(2)}<br><br>
+                            <small style="color:#666;">
+                                💡 <strong>Cách đọc:</strong> Similarity càng cao càng giống (≥0.35 = match)
+                            </small>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('result3').innerHTML = `<div class="result error">❌ ${data.message || data.error}</div>`;
+                }
+            } catch (e) {
+                document.getElementById('result3').innerHTML = `<div class="result error">❌ Lỗi: ${e.message}</div>`;
+            }
+        }
+    </script>
+</body>
+
+</html>

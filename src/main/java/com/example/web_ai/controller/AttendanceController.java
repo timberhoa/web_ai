@@ -3,6 +3,7 @@ package com.example.web_ai.controller;
 import com.example.web_ai.dto.request.AttendanceUpdateRequest;
 import com.example.web_ai.dto.request.CheckAttendanceRequest;
 import com.example.web_ai.dto.request.SelfCheckAttendanceRequest;
+import com.example.web_ai.dto.HybridCheckInResponse;
 import com.example.web_ai.dto.response.*;
 import com.example.web_ai.service.AttendanceService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,6 +42,33 @@ public class AttendanceController {
             @Valid @RequestBody SelfCheckAttendanceRequest request) {
         Jwt jwt = (Jwt) authentication.getPrincipal();
         return ResponseEntity.ok(attendanceService.selfCheck(UUID.fromString(jwt.getClaim("id")), request));
+    }
+
+    @PostMapping(value = "/check-in-hybrid", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('STUDENT')")
+    @Operation(summary = "Hybrid Check-in (Face + Location)", description = "Check-in using both Face Recognition and Location. Fallback to Location only if API is down.")
+    public ResponseEntity<HybridCheckInResponse> checkInHybrid(
+            Authentication authentication,
+            @RequestParam("image") org.springframework.web.multipart.MultipartFile image,
+            @RequestParam("sessionId") UUID sessionId,
+            @RequestParam("latitude") Double latitude,
+            @RequestParam("longitude") Double longitude) {
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        return ResponseEntity.ok(attendanceService.checkInHybrid(
+                UUID.fromString(jwt.getClaim("id")),
+                image,
+                sessionId,
+                latitude,
+                longitude));
+    }
+
+    @PostMapping(value = "/teacher-check-in-face", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('TEACHER')")
+    @Operation(summary = "Teacher Check-in by Face (1:N)", description = "Teacher scans student face to identify and check-in.")
+    public ResponseEntity<com.example.web_ai.dto.response.TeacherCheckInResponse> teacherCheckInFace(
+            @RequestParam("image") org.springframework.web.multipart.MultipartFile image,
+            @RequestParam("sessionId") UUID sessionId) {
+        return ResponseEntity.ok(attendanceService.teacherCheckInFace(sessionId, image));
     }
 
     @GetMapping("/session/{sessionId}")

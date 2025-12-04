@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -74,8 +75,10 @@ public class EnrollmentAdminService {
     }
 
     public List<com.example.web_ai.dto.response.EnrollmentItemResponse> listStudentsByCourse(UUID courseId) {
-        if (courseId == null) throw new BadRequestException("COURSE_ID_REQUIRED");
-        if (!courseRepository.existsById(courseId)) throw new NotFoundException("COURSE_NOT_FOUND");
+        if (courseId == null)
+            throw new BadRequestException("COURSE_ID_REQUIRED");
+        if (!courseRepository.existsById(courseId))
+            throw new NotFoundException("COURSE_NOT_FOUND");
         return enrollmentRepository.findByCourse_IdWithStudent(courseId).stream()
                 .map(e -> com.example.web_ai.dto.response.EnrollmentItemResponse.builder()
                         .enrollmentId(e.getId())
@@ -83,7 +86,7 @@ public class EnrollmentAdminService {
                         .studentName(e.getStudent().getFullName())
                         .studentEmail(e.getStudent().getEmail())
                         .build())
-                .toList();
+                .collect(Collectors.toList());
     }
 
     public void deleteEnrollment(UUID enrollmentId) {
@@ -104,7 +107,7 @@ public class EnrollmentAdminService {
         if (request.getFacultyId() != null) {
             candidates = candidates.stream()
                     .filter(u -> u.getFaculty() != null && request.getFacultyId().equals(u.getFaculty().getId()))
-                    .toList();
+                    .collect(Collectors.toList());
         }
 
         Integer limit = request.getLimit();

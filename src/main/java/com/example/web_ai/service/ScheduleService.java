@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -91,7 +92,7 @@ public class ScheduleService {
         }
 
         List<ClassSession> saved = classSessionRepository.saveAll(sessions);
-        return saved.stream().map(classSessionMapper::toResponse).toList();
+        return saved.stream().map(classSessionMapper::toResponse).collect(Collectors.toList());
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
@@ -128,10 +129,10 @@ public class ScheduleService {
     }
 
     public Page<ClassSessionResponse> searchSessions(UUID courseId,
-                                                     UUID teacherId,
-                                                     LocalDateTime from,
-                                                     LocalDateTime to,
-                                                     Pageable pageable) {
+            UUID teacherId,
+            LocalDateTime from,
+            LocalDateTime to,
+            Pageable pageable) {
         Specification<ClassSession> spec = Specification.where(null);
 
         if (courseId != null) {
@@ -176,10 +177,10 @@ public class ScheduleService {
     }
 
     private void validateConflicts(UUID courseId,
-                                   UUID excludeSessionId,
-                                   LocalDateTime start,
-                                   LocalDateTime end,
-                                   String roomName) {
+            UUID excludeSessionId,
+            LocalDateTime start,
+            LocalDateTime end,
+            String roomName) {
         if (classSessionRepository.hasOverlappingSessionForCourse(courseId, excludeSessionId, start, end)) {
             throw new BadRequestException("COURSE_SESSION_CONFLICT");
         }
