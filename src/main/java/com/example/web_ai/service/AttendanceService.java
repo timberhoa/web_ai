@@ -176,32 +176,20 @@ public class AttendanceService {
         User student = userRepository.findUserById(studentId)
                 .orElseThrow(() -> new NotFoundException("USER_NOT_FOUND"));
 
-        // 4. Face Recognition (with Fallback)
+        // 4. Face Recognition (Strict)
         boolean faceMatched = false;
-        String checkInType = "LOCATION_ONLY";
-        String message = "Check-in successful (Location only)";
+        String checkInType = "FACE_AND_LOCATION";
+        String message = "Check-in successful (Face + Location)";
         Float confidence = 0f;
 
-        try {
-            HybridCheckInResponse faceResult = faceRecognitionService.verifyFace(studentId, image);
-            if (Boolean.TRUE.equals(faceResult.getIsMatch())) {
-                faceMatched = true;
-                checkInType = "FACE_AND_LOCATION";
-                message = "Check-in successful (Face + Location)";
-                confidence = faceResult.getConfidence();
-            } else {
-                log.warn("Face verification failed. Confidence: {} < Threshold", faceResult.getConfidence());
-                throw new com.example.web_ai.exception.FaceVerificationFailedException(
-                        "Face verification failed (Confidence: " + faceResult.getConfidence() + ")");
-            }
-        } catch (com.example.web_ai.exception.FaceRecognitionApiException e) {
-            // API Down -> Fallback to Location Only
-            log.warn("Face API down or error, falling back to location only: {}", e.getMessage());
-            checkInType = "LOCATION_ONLY (Fallback)";
-            message = "Check-in successful (Location fallback - Face API unavailable)";
-        } catch (com.example.web_ai.exception.FaceVerificationFailedException e) {
-            // Face mismatch -> Fail check-in
-            throw e;
+        HybridCheckInResponse faceResult = faceRecognitionService.verifyFace(studentId, image);
+        if (Boolean.TRUE.equals(faceResult.getIsMatch())) {
+            faceMatched = true;
+            confidence = faceResult.getConfidence();
+        } else {
+            log.warn("Face verification failed. Confidence: {} < Threshold", faceResult.getConfidence());
+            throw new com.example.web_ai.exception.FaceVerificationFailedException(
+                    "Face verification failed (Confidence: " + faceResult.getConfidence() + ")");
         }
 
         // 5. Save Attendance
@@ -249,10 +237,21 @@ public class AttendanceService {
         List<User> students = enrollments.stream().map(Enrollment::getStudent).collect(Collectors.toList());
 
         // 2. Identify student from image
-        org.springframework.data.util.Pair<User, Double> identificationResult = faceRecognitionService
-                .identifyStudent(students, image);
-        User identifiedStudent = identificationResult.getFirst();
-        Double confidence = identificationResult.getSecond();
+        User identifiedStudent;
+        Double confidence;
+
+        try {
+            org.springframework.data.util.Pair<User, Double> identificationResult = faceRecognitionService
+                    .identifyStudent(students, image);
+            identifiedStudent = identificationResult.getFirst();
+            confidence = identificationResult.getSecond();
+        } catch (com.example.web_ai.exception.FaceVerificationFailedException
+                | com.example.web_ai.exception.FaceRecognitionApiException e) {
+            return com.example.web_ai.dto.response.TeacherCheckInResponse.builder()
+                    .success(false)
+                    .message(e.getMessage())
+                    .build();
+        }
 
         // 3. Mark attendance
         Attendance attendance = attendanceRepository

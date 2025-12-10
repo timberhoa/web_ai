@@ -147,9 +147,12 @@ public class FaceRecognitionService {
         }
 
         // 2. Compare with each student
+        // Trên 0.80 (80%): Rất giống nhau (Chính chủ).
+        // 0.60 - 0.75 (60-75%): Khá giống (Chấp nhận được cho điểm danh).
+        // Dưới 0.50 (50%): Độ tin cậy thấp, dễ nhận nhầm (trường hợp đeo khẩu trang).
         User bestMatch = null;
         double maxSimilarity = -1.0;
-        double THRESHOLD = 0.35; // Same as Python API
+        double THRESHOLD = 0.6;
 
         for (User student : students) {
             if (!Boolean.TRUE.equals(student.getFaceRegistered()) || student.getFaceVector() == null) {
