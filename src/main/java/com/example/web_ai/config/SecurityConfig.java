@@ -17,7 +17,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
@@ -45,9 +44,12 @@ public class SecurityConfig {
 
     private static final String[] PUBLIC = {
             "/api/auth/login",
+            "/api/auth/register",
+            "/api/auth/forgot-password",
+            "/api/auth/reset-password",
+            "/api/auth/validate-reset-token",
             "/api/course",
             "/api/course/{id}",
-            "/api/auth/register",
             "/api/faculties",
             "/api/debug/**",
             "/v3/api-docs/**",

@@ -3,16 +3,20 @@ package com.example.web_ai.service;
 import com.example.web_ai.dto.request.ResetPassword;
 import com.example.web_ai.dto.request.UpdateProfileMeRequest;
 import com.example.web_ai.dto.request.UserRequest;
-import com.example.web_ai.dto.response.FacultySimpleResponse;
+import com.example.web_ai.dto.response.ForgotPasswordResponse;
 import com.example.web_ai.dto.response.GradeResponse;
+import com.example.web_ai.dto.response.ResetPasswordResponse;
 import com.example.web_ai.dto.response.UserResponse;
+import com.example.web_ai.dto.response.ValidateTokenResponse;
 import com.example.web_ai.entity.Image;
+import com.example.web_ai.entity.PasswordResetToken;
 import com.example.web_ai.entity.User;
 import com.example.web_ai.enums.Role;
 import com.example.web_ai.exception.BadRequestException;
 import com.example.web_ai.exception.NotFoundException;
 import com.example.web_ai.mapper.UserMapper;
 import com.example.web_ai.repository.ImageRepository;
+import com.example.web_ai.repository.PasswordResetTokenRepository;
 import com.example.web_ai.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,10 +27,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Base64;
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -36,6 +39,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final ImageRepository imageRepository;
     private final UserMapper userMapper;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+//    private final EmailService emailService;
 
     public UserResponse getUserById(UUID id) {
         User u = userRepository.findUserById(id)
@@ -168,5 +173,164 @@ public class UserService {
         }
 
         return users.map(userMapper::toResponse);
+    }
+
+    // ========== Password Reset Methods ==========
+
+    /**
+     * Create a password reset token and send it via email
+     * 
+     * @param email User's email address
+     * @return Response with masked email
+     */
+    public ForgotPasswordResponse createPasswordResetToken(String email) {
+        // Find user by email (case insensitive via repository query)
+        User user = userRepository.findByEmail(email)
+                .orElse(null);
+
+        // Security: Always return success message even if user not found
+        // This prevents email enumeration attacks
+        if (user == null) {
+            log.warn("Password reset requested for non-existent email: {}", email);
+            return ForgotPasswordResponse.builder()
+                    .message("If an account exists with this email, a password reset link has been sent.")
+                    .tokenSentTo(maskEmail(email))
+                    .build();
+        }
+
+        // Delete any existing tokens for this user
+        passwordResetTokenRepository.deleteByUser(user);
+
+        // Generate secure random token
+        String token = UUID.randomUUID().toString();
+
+        // Create token entity with 24-hour expiration
+        PasswordResetToken resetToken = PasswordResetToken.builder()
+                .token(token)
+                .user(user)
+                .expiryDate(LocalDateTime.now().plusHours(24))
+                .used(false)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        passwordResetTokenRepository.save(resetToken);
+
+        // Send email (or log to console in dev mode)
+        String resetUrl = "http://localhost:3000/reset-password?token=" + token;
+//        emailService.sendPasswordResetEmail(user.getEmail(), token, resetUrl);
+
+        log.info("Password reset token created for user: {}", user.getUsername());
+
+        return ForgotPasswordResponse.builder()
+                .message("If an account exists with this email, a password reset link has been sent.")
+                .tokenSentTo(maskEmail(email))
+                .build();
+    }
+
+    /**
+     * Validate a password reset token
+     * 
+     * @param token Reset token
+     * @return Validation response
+     */
+    public ValidateTokenResponse validatePasswordResetToken(String token) {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
+                .orElse(null);
+
+        if (resetToken == null) {
+            return ValidateTokenResponse.builder()
+                    .valid(false)
+                    .message("Invalid reset token")
+                    .build();
+        }
+
+        if (resetToken.getUsed()) {
+            return ValidateTokenResponse.builder()
+                    .valid(false)
+                    .message("This reset token has already been used")
+                    .build();
+        }
+
+        if (resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+            return ValidateTokenResponse.builder()
+                    .valid(false)
+                    .message("Reset token has expired")
+                    .build();
+        }
+
+        return ValidateTokenResponse.builder()
+                .valid(true)
+                .message("Token is valid")
+                .build();
+    }
+
+    /**
+     * Reset user password using a valid token
+     * 
+     * @param token       Reset token
+     * @param newPassword New password
+     * @return Response message
+     */
+    public ResetPasswordResponse resetPasswordWithToken(String token, String newPassword, String confirmPassword) {
+        // Validate passwords match
+        if (!newPassword.equals(confirmPassword)) {
+            throw new BadRequestException("PASSWORD_CONFIRM_NOT_MATCH");
+        }
+
+        // Validate password strength
+        if (newPassword.length() < 8) {
+            throw new BadRequestException("PASSWORD_TOO_WEAK");
+        }
+
+        // Find and validate token
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
+                .orElseThrow(() -> new BadRequestException("INVALID_RESET_TOKEN"));
+
+        if (resetToken.getUsed()) {
+            throw new BadRequestException("TOKEN_ALREADY_USED");
+        }
+
+        if (resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("TOKEN_EXPIRED");
+        }
+
+        // Get user and update password
+        User user = resetToken.getUser();
+
+        // Check if new password is same as old password
+        if (passwordEncoder.matches(newPassword, user.getPassword())) {
+            throw new BadRequestException("NEW_PASSWORD_MUST_DIFFER_FROM_OLD");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        // Mark token as used
+        resetToken.setUsed(true);
+        passwordResetTokenRepository.save(resetToken);
+
+        log.info("Password reset successful for user: {}", user.getUsername());
+
+        return ResetPasswordResponse.builder()
+                .message("Password has been reset successfully. You can now login with your new password.")
+                .build();
+    }
+
+    /**
+     * Mask email for privacy (e.g., "user@example.com" -> "u***@example.com")
+     */
+    private String maskEmail(String email) {
+        if (email == null || !email.contains("@")) {
+            return "***";
+        }
+        String[] parts = email.split("@");
+        String username = parts[0];
+        String domain = parts[1];
+
+        if (username.length() <= 1) {
+            return username + "***@" + domain;
+        }
+
+        return username.charAt(0) + "***@" + domain;
     }
 }
