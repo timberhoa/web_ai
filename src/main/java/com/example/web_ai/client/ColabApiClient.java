@@ -24,7 +24,7 @@ public class ColabApiClient {
     private final FaceRecognitionProperties properties;
     private final WebClient.Builder webClientBuilder;
 
-    public Map<String, Object> extractVectorsBatch(List<MultipartFile> images) {
+    public Map<String, Object> extractVectorsBatch(List<MultipartFile> images, String studentId, String studentName) {
         try {
             MultipartBodyBuilder builder = new MultipartBodyBuilder();
             for (MultipartFile file : images) {
@@ -34,6 +34,14 @@ public class ColabApiClient {
                         return file.getOriginalFilename();
                     }
                 });
+            }
+
+            // Add student info for logging
+            if (studentId != null) {
+                builder.part("student_id", studentId);
+            }
+            if (studentName != null) {
+                builder.part("student_name", studentName);
             }
 
             return webClientBuilder.build()
@@ -82,7 +90,7 @@ public class ColabApiClient {
         }
     }
 
-    public Map<String, Object> verify(MultipartFile image, String targetVector) {
+    public Map<String, Object> verify(MultipartFile image, String targetVector, String studentId, String studentName) {
         try {
             MultipartBodyBuilder builder = new MultipartBodyBuilder();
             builder.part("file", new ByteArrayResource(image.getBytes()) {
@@ -92,6 +100,14 @@ public class ColabApiClient {
                 }
             });
             builder.part("target_vector", targetVector);
+
+            // Add student info for logging
+            if (studentId != null) {
+                builder.part("student_id", studentId);
+            }
+            if (studentName != null) {
+                builder.part("student_name", studentName);
+            }
 
             return webClientBuilder.build()
                     .post()

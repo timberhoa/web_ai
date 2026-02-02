@@ -31,8 +31,8 @@ public class FaceRecognitionService {
 
     @Transactional
     public FaceRegistrationResponse registerFace(UUID userId, List<MultipartFile> images) {
-        if (images == null || images.size() < 3 || images.size() > 10) {
-            throw new InvalidImageException("Requires 3-10 images for registration");
+        if (images == null || images.size() < 3 || images.size() > 20) {
+            throw new InvalidImageException("Requires 3-20 images for registration");
         }
 
         for (MultipartFile img : images) {
@@ -49,8 +49,13 @@ public class FaceRecognitionService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         try {
-            // Call Colab API to extract average vector
-            Map<String, Object> response = colabApiClient.extractVectorsBatch(images);
+            // // Call Colab API to extract average vector
+            // Map<String, Object> response = colabApiClient.extractVectorsBatch(images);
+            // Call Colab API to extract average vector with student info for logging
+            Map<String, Object> response = colabApiClient.extractVectorsBatch(
+                    images,
+                    user.getId().toString(),
+                    user.getFullName());
 
             if (!Boolean.TRUE.equals(response.get("success"))) {
                 throw new FaceRecognitionApiException((String) response.get("message"));
@@ -88,7 +93,14 @@ public class FaceRecognitionService {
         }
 
         try {
-            Map<String, Object> response = colabApiClient.verify(image, user.getFaceVector());
+            // Map<String, Object> response = colabApiClient.verify(image,
+            // user.getFaceVector());
+
+            Map<String, Object> response = colabApiClient.verify(
+                    image,
+                    user.getFaceVector(),
+                    user.getId().toString(),
+                    user.getFullName());
 
             if (!Boolean.TRUE.equals(response.get("success"))) {
                 throw new FaceRecognitionApiException((String) response.get("message"));
